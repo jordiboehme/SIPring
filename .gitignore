@@ -37,6 +37,9 @@ htmlcov/
 # Claude AI context (contains project-specific notes)
 CLAUDE.md
 
+# Personal stack configuration
+docker/stack.yml
+
 # OS files
 .DS_Store
 Thumbs.db
