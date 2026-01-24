@@ -131,8 +131,8 @@ async def dashboard(request: Request, _: bool = Depends(optional_auth)):
 
     # Add ring status to configs
     config_data = []
+    base_url = settings.get_base_url(str(request.base_url))
     for config in configs:
-        base_url = str(request.base_url).rstrip('/')
         identifier = config.slug or str(config.id)
 
         config_data.append({
@@ -191,7 +191,7 @@ async def config_detail(request: Request, id_or_slug: str, _: bool = Depends(opt
     except Exception:
         raise HTTPException(status_code=404, detail="Configuration not found")
 
-    base_url = str(request.base_url).rstrip('/')
+    base_url = settings.get_base_url(str(request.base_url))
     identifier = config.slug or str(config.id)
 
     return templates.TemplateResponse(

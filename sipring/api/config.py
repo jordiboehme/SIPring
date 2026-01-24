@@ -6,6 +6,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Request
 
+from ..config import get_settings
 from ..models import (
     RingConfig,
     RingConfigCreate,
@@ -24,7 +25,8 @@ router = APIRouter(prefix="/api/configs", tags=["config"])
 
 def config_to_response(config: RingConfig, request: Request) -> RingConfigResponse:
     """Convert RingConfig to response with URLs."""
-    base_url = str(request.base_url).rstrip('/')
+    settings = get_settings()
+    base_url = settings.get_base_url(str(request.base_url))
     identifier = config.slug or str(config.id)
 
     return RingConfigResponse(

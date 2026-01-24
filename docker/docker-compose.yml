@@ -24,6 +24,8 @@ services:
     environment:
       - SIPRING_DATA_DIR=/data
       - SIPRING_LOG_LEVEL=INFO
+      # Optional: External URL for reverse proxy setups
+      # - SIPRING_BASE_URL=https://sipring.example.com
       # Optional: Enable basic authentication
       # - SIPRING_USERNAME=admin
       # - SIPRING_PASSWORD=changeme

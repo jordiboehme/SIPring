@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     port: int = 8080
 
+    # External URL (for reverse proxy setups)
+    base_url: Optional[str] = None  # e.g., "https://sipring.example.com"
+
     # Optional basic auth
     username: Optional[str] = None
     password: Optional[str] = None
@@ -43,6 +46,12 @@ class Settings(BaseSettings):
     def auth_enabled(self) -> bool:
         """Check if basic auth is enabled."""
         return bool(self.username and self.password)
+
+    def get_base_url(self, request_base_url: str) -> str:
+        """Get base URL, preferring configured value over request URL."""
+        if self.base_url:
+            return self.base_url.rstrip('/')
+        return request_base_url.rstrip('/')
 
 
 @lru_cache
