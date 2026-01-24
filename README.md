@@ -113,6 +113,7 @@ curl -X DELETE http://localhost:8080/api/configs/front-door
 | `SIPRING_DATA_DIR`  | `/data` | Directory for storing configuration                                  |
 | `SIPRING_PORT`      | `8080`  | HTTP server port                                                     |
 | `SIPRING_BASE_URL`  | -       | External URL for reverse proxy (e.g., `https://sipring.example.com`) |
+| `SIPRING_SIP_HOST`  | -       | External IP/hostname for SIP headers (for NAT/proxy setups)          |
 | `SIPRING_LOG_LEVEL` | `INFO`  | Log level (DEBUG, INFO, WARNING, ERROR)                              |
 | `SIPRING_USERNAME`  | -       | Basic auth username (optional)                                       |
 | `SIPRING_PASSWORD`  | -       | Basic auth password (optional)                                       |

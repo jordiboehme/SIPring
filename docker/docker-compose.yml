@@ -26,6 +26,8 @@ services:
       - SIPRING_LOG_LEVEL=INFO
       # Optional: External URL for reverse proxy setups
       # - SIPRING_BASE_URL=https://sipring.example.com
+      # Optional: External IP/hostname for SIP headers (NAT/proxy setups)
+      # - SIPRING_SIP_HOST=192.168.1.10
       # Optional: Enable basic authentication
       # - SIPRING_USERNAME=admin
       # - SIPRING_PASSWORD=changeme

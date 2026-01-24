@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Callable
 
+from ..config import get_settings
 from .messages import (
     SIPMessage,
     CallState,
@@ -87,9 +88,22 @@ class SIPClient:
         self.target_port = target_port
         self.caller_name = caller_name
         self.caller_user = caller_user
-        self.local_host = local_host or get_local_ip(target_host, target_port)
         self.local_port = local_port
         self.user_agent = user_agent
+
+        # Determine local host: config override > parameter > auto-detect
+        settings = get_settings()
+        if settings.sip_host:
+            # External host configured (NAT/proxy setup)
+            # Advertise configured host in SIP headers, but bind to all interfaces
+            self.local_host = settings.sip_host
+            self._bind_host = "0.0.0.0"
+        elif local_host:
+            self.local_host = local_host
+            self._bind_host = local_host
+        else:
+            self.local_host = get_local_ip(target_host, target_port)
+            self._bind_host = self.local_host
 
         self._msg_builder: Optional[SIPMessage] = None
         self._protocol: Optional[SIPProtocol] = None
@@ -118,9 +132,9 @@ class SIPClient:
         loop = asyncio.get_event_loop()
         self._transport, self._protocol = await loop.create_datagram_endpoint(
             SIPProtocol,
-            local_addr=(self.local_host, self.local_port),
+            local_addr=(self._bind_host, self.local_port),
         )
-        logger.info(f"SIP client bound to {self.local_host}:{self.local_port}")
+        logger.info(f"SIP client bound to {self._bind_host}:{self.local_port}, advertising {self.local_host}:{self.local_port}")
 
     async def _close(self) -> None:
         """Close transport."""

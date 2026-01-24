@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     # External URL (for reverse proxy setups)
     base_url: Optional[str] = None  # e.g., "https://sipring.example.com"
 
+    # SIP external host (for NAT/proxy setups)
+    sip_host: Optional[str] = None  # e.g., "192.168.1.10" or "sipring.local"
+
     # Optional basic auth
     username: Optional[str] = None
     password: Optional[str] = None
