@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  sipring:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: sipring
+    restart: unless-stopped
+
+    # Use host networking for SIP UDP to work correctly
+    # SIP requires the source IP to match what the phone sees
+    network_mode: host
+
+    # Alternative: Use bridge networking with port mapping
+    # Note: May not work with all SIP phones due to NAT issues
+    # ports:
+    #   - "8080:8080"
+    #   - "5062:5062/udp"
+
+    volumes:
+      - sipring-data:/data
+
+    environment:
+      - SIPRING_DATA_DIR=/data
+      - SIPRING_LOG_LEVEL=INFO
+      # Optional: Enable basic authentication
+      # - SIPRING_USERNAME=admin
+      # - SIPRING_PASSWORD=changeme
+      # Override default ports if using host networking
+      - SIPRING_PORT=8080
+
+volumes:
+  sipring-data:
+    driver: local
+
+# For Docker Swarm deployment with NFS:
+# volumes:
+#   sipring-data:
+#     driver: local
+#     driver_opts:
+#       type: nfs
+#       o: addr=nfs-server.local,rw,nolock
+#       device: ":/path/to/sipring/data"

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - SIPring{% endblock %}
+
+{% block content %}
+<div class="card-header" style="margin-bottom: 20px;">
+    <h1>Ring Configurations</h1>
+    <a href="/config/new" class="btn btn-primary">+ New Configuration</a>
+</div>
+
+{% if active_count > 0 %}
+<div class="alert alert-success">
+    {{ active_count }} ring{% if active_count > 1 %}s{% endif %} currently active
+</div>
+{% endif %}
+
+{% if configs %}
+<div class="configs-grid">
+    {% for item in configs %}
+    <div class="card">
+        <div class="card-header">
+            <div>
+                <span class="card-title">{{ item.config.name }}</span>
+                {% if item.is_ringing %}
+                <span class="status-badge status-ringing">Ringing</span>
+                {% elif item.config.enabled %}
+                <span class="status-badge status-enabled">Enabled</span>
+                {% else %}
+                <span class="status-badge status-disabled">Disabled</span>
+                {% endif %}
+            </div>
+            <div>
+                <button class="btn btn-primary btn-small" onclick="triggerRing('{{ item.ring_url }}', this)">
+                    Ring
+                </button>
+                <button class="btn btn-secondary btn-small" onclick="testRing('{{ item.config.id }}', this)">
+                    Test
+                </button>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 15px; color: var(--text-secondary); font-size: 14px;">
+            <div>Target: {{ item.config.sip_user }}@{{ item.config.sip_server }}:{{ item.config.sip_port }}</div>
+            <div>Caller: {{ item.config.caller_name }}</div>
+            <div>Duration: {{ item.config.ring_duration }}s</div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 10px;">
+            <label>Ring URL</label>
+            <div class="url-box">
+                <code>{{ item.ring_url }}</code>
+                <button onclick="copyToClipboard('{{ item.ring_url }}', this)">Copy</button>
+            </div>
+        </div>
+
+        {% if item.config.last_ring_at %}
+        <div class="timestamp">
+            Last ring: {{ item.config.last_ring_at.strftime('%Y-%m-%d %H:%M:%S') }}
+            {% if item.config.last_ring_status %}
+            ({{ item.config.last_ring_status }})
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border);">
+            <a href="/config/{{ item.config.slug or item.config.id }}" class="btn btn-secondary btn-small">View</a>
+            <a href="/config/{{ item.config.slug or item.config.id }}/edit" class="btn btn-secondary btn-small">Edit</a>
+            <button class="btn btn-secondary btn-small" style="color: var(--accent);"
+                    onclick="deleteConfig('{{ item.config.id }}', '{{ item.config.name }}')">Delete</button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <h2>No configurations yet</h2>
+    <p>Create your first ring configuration to get started.</p>
+    <a href="/config/new" class="btn btn-primary" style="margin-top: 20px;">Create Configuration</a>
+</div>
+{% endif %}
+
+<style>
+    .configs-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+        gap: 20px;
+    }
+
+    @media (max-width: 500px) {
+        .configs-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

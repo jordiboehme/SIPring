@@ -1,0 +1,42 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+*.egg
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment files
+.env
+.env.local
+
+# Data directory (contains runtime config)
+data/
+*.json
+!package.json
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Claude AI context (contains project-specific notes)
+CLAUDE.md
+
+# OS files
+.DS_Store
+Thumbs.db

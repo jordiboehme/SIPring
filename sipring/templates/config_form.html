@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}{{ action }} Configuration - SIPring{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h1 style="margin-bottom: 20px;">{{ action }} Ring Configuration</h1>
+
+    <form id="configForm">
+        <div class="form-row">
+            <div class="form-group">
+                <label for="name">Name *</label>
+                <input type="text" id="name" name="name" class="form-control" required
+                       value="{{ config.name if config else '' }}"
+                       placeholder="e.g., Doorbell (Front Door)">
+            </div>
+
+            <div class="form-group">
+                <label for="slug">Slug (URL identifier)</label>
+                <input type="text" id="slug" name="slug" class="form-control"
+                       value="{{ config.slug if config else '' }}"
+                       placeholder="e.g., doorbell-front (auto-generated if empty)">
+            </div>
+        </div>
+
+        <h3 style="margin: 20px 0 15px; color: var(--text-secondary);">SIP Target</h3>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="sip_user">SIP User/Extension *</label>
+                <input type="text" id="sip_user" name="sip_user" class="form-control" required
+                       value="{{ config.sip_user if config else '' }}"
+                       placeholder="e.g., **610">
+            </div>
+
+            <div class="form-group">
+                <label for="sip_server">SIP Server *</label>
+                <input type="text" id="sip_server" name="sip_server" class="form-control" required
+                       value="{{ config.sip_server if config else '' }}"
+                       placeholder="e.g., 192.168.1.100">
+            </div>
+
+            <div class="form-group">
+                <label for="sip_port">SIP Port</label>
+                <input type="number" id="sip_port" name="sip_port" class="form-control"
+                       value="{{ config.sip_port if config else 5060 }}"
+                       min="1" max="65535">
+            </div>
+        </div>
+
+        <h3 style="margin: 20px 0 15px; color: var(--text-secondary);">Caller ID</h3>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="caller_name">Caller Display Name *</label>
+                <input type="text" id="caller_name" name="caller_name" class="form-control" required
+                       value="{{ config.caller_name if config else '' }}"
+                       placeholder="e.g., Klingel (Haustuer)">
+            </div>
+
+            <div class="form-group">
+                <label for="caller_user">Caller SIP User</label>
+                <input type="text" id="caller_user" name="caller_user" class="form-control"
+                       value="{{ config.caller_user if config else 'doorbell' }}"
+                       placeholder="e.g., doorbell">
+            </div>
+        </div>
+
+        <h3 style="margin: 20px 0 15px; color: var(--text-secondary);">Options</h3>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="ring_duration">Ring Duration (seconds)</label>
+                <input type="number" id="ring_duration" name="ring_duration" class="form-control"
+                       value="{{ config.ring_duration if config else 30 }}"
+                       min="1" max="300">
+            </div>
+
+            <div class="form-group">
+                <label for="local_port">Local UDP Port</label>
+                <input type="number" id="local_port" name="local_port" class="form-control"
+                       value="{{ config.local_port if config else 5062 }}"
+                       min="1024" max="65535">
+            </div>
+
+            <div class="form-group">
+                <label for="enabled">Status</label>
+                <select id="enabled" name="enabled" class="form-control">
+                    <option value="true" {% if not config or config.enabled %}selected{% endif %}>Enabled</option>
+                    <option value="false" {% if config and not config.enabled %}selected{% endif %}>Disabled</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; display: flex; gap: 10px;">
+            <button type="submit" class="btn btn-primary">{{ action }} Configuration</button>
+            <a href="/" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.getElementById('configForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const form = e.target;
+        const data = {
+            name: form.name.value,
+            slug: form.slug.value || null,
+            sip_user: form.sip_user.value,
+            sip_server: form.sip_server.value,
+            sip_port: parseInt(form.sip_port.value),
+            caller_name: form.caller_name.value,
+            caller_user: form.caller_user.value,
+            ring_duration: parseInt(form.ring_duration.value),
+            local_port: parseInt(form.local_port.value),
+            enabled: form.enabled.value === 'true'
+        };
+
+        {% if config %}
+        const url = '/api/configs/{{ config.id }}';
+        const method = 'PUT';
+        {% else %}
+        const url = '/api/configs';
+        const method = 'POST';
+        {% endif %}
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                window.location.href = '/';
+            } else {
+                const error = await response.json();
+                alert(error.detail || 'Failed to save configuration');
+            }
+        } catch (error) {
+            alert('Failed to save configuration: ' + error.message);
+        }
+    });
+</script>
+{% endblock %}

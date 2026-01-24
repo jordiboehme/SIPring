@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SIPring{% endblock %}</title>
+    <style>
+        :root {
+            --bg-primary: #1a1a2e;
+            --bg-secondary: #16213e;
+            --bg-card: #0f3460;
+            --text-primary: #e8e8e8;
+            --text-secondary: #a0a0a0;
+            --accent: #e94560;
+            --accent-hover: #ff6b6b;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --border: #2a2a4a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 15px 0;
+            margin-bottom: 30px;
+        }
+
+        header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            margin-left: 20px;
+            transition: color 0.2s;
+        }
+
+        nav a:hover {
+            color: var(--text-primary);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--border);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-enabled {
+            background: rgba(76, 175, 80, 0.2);
+            color: var(--success);
+        }
+
+        .status-disabled {
+            background: rgba(255, 152, 0, 0.2);
+            color: var(--warning);
+        }
+
+        .status-ringing {
+            background: rgba(233, 69, 96, 0.2);
+            color: var(--accent);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .url-box {
+            display: flex;
+            align-items: center;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-top: 5px;
+        }
+
+        .url-box code {
+            flex: 1;
+            font-family: monospace;
+            font-size: 13px;
+            color: var(--text-secondary);
+            overflow-x: auto;
+        }
+
+        .url-box button {
+            margin-left: 10px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .url-box button:hover {
+            color: var(--text-primary);
+        }
+
+        .timestamp {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .alert-success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid var(--success);
+        }
+
+        .alert-error {
+            background: rgba(233, 69, 96, 0.2);
+            border: 1px solid var(--accent);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state h2 {
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <header>
+        <div class="container">
+            <a href="/" class="logo">SIPring</a>
+            <nav>
+                <a href="/">Dashboard</a>
+                <a href="/config/new">New Config</a>
+                <a href="/docs">API Docs</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="container">
+            SIPring v0.1.0 - SIP Phone Ringing Service<br>
+            &copy; 2025 Jordi Böhme
+        </div>
+    </footer>
+
+    <script>
+        function copyToClipboard(text, button) {
+            navigator.clipboard.writeText(text).then(() => {
+                const original = button.textContent;
+                button.textContent = 'Copied!';
+                setTimeout(() => button.textContent = original, 2000);
+            });
+        }
+
+        function triggerRing(url, button) {
+            const original = button.textContent;
+            button.textContent = 'Ringing...';
+            button.disabled = true;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    button.textContent = data.status;
+                    setTimeout(() => {
+                        button.textContent = original;
+                        button.disabled = false;
+                    }, 3000);
+                })
+                .catch(error => {
+                    button.textContent = 'Error';
+                    setTimeout(() => {
+                        button.textContent = original;
+                        button.disabled = false;
+                    }, 3000);
+                });
+        }
+
+        function testRing(configId, button) {
+            const original = button.textContent;
+            button.textContent = 'Testing...';
+            button.disabled = true;
+
+            fetch(`/api/configs/${configId}/test`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    button.textContent = data.result || 'Done';
+                    setTimeout(() => {
+                        button.textContent = original;
+                        button.disabled = false;
+                    }, 3000);
+                })
+                .catch(error => {
+                    button.textContent = 'Error';
+                    setTimeout(() => {
+                        button.textContent = original;
+                        button.disabled = false;
+                    }, 3000);
+                });
+        }
+
+        function deleteConfig(configId, name) {
+            if (!confirm(`Delete configuration "${name}"?`)) return;
+
+            fetch(`/api/configs/${configId}`, { method: 'DELETE' })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        alert('Failed to delete configuration');
+                    }
+                });
+        }
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
