@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}About - SIPring{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">About SIPring</h1>
+        <p class="page-subtitle">SIP Phone Ringing Service</p>
+    </div>
+</div>
+
+<div class="card">
+    <!-- Hero Section -->
+    <div class="about-hero">
+        <svg class="about-logo"><use href="#icon-logo"></use></svg>
+        <h2 class="about-title">SIPring</h2>
+        <div class="about-version">Version {{ version }}</div>
+        <p class="about-description">
+            A Docker-based SIP phone ringing service for triggering alerts via HTTP requests.
+            Perfect for doorbell notifications, alarm systems, and home automation.
+        </p>
+    </div>
+
+    <!-- Features Section -->
+    <div class="about-section">
+        <div class="about-section-title">Features</div>
+        <div class="property-grid">
+            <div class="property-item">
+                <div class="property-label">HTTP Triggers</div>
+                <div class="property-value">Ring any SIP phone via simple HTTP GET requests</div>
+            </div>
+            <div class="property-item">
+                <div class="property-label">Custom Caller ID</div>
+                <div class="property-value">Display custom names on the phone</div>
+            </div>
+            <div class="property-item">
+                <div class="property-label">Multiple Configs</div>
+                <div class="property-value">Create different ring configurations for various use cases</div>
+            </div>
+            <div class="property-item">
+                <div class="property-label">Docker Ready</div>
+                <div class="property-value">Easy deployment with Docker and docker-compose</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Links Section -->
+    <div class="about-section">
+        <div class="about-section-title">Resources</div>
+        <div class="about-links">
+            <a href="https://github.com/jordiboehme/sipring" class="about-link" target="_blank" rel="noopener">
+                <svg><use href="#icon-github"></use></svg>
+                GitHub Repository
+            </a>
+            <a href="/docs" class="about-link" target="_blank">
+                <svg><use href="#icon-api"></use></svg>
+                API Documentation
+            </a>
+        </div>
+    </div>
+
+    <!-- License Section -->
+    <div class="about-section">
+        <div class="about-section-title">License</div>
+        <div class="property-grid">
+            <div class="property-item">
+                <div class="property-label">License Type</div>
+                <div class="property-value">MIT License</div>
+            </div>
+            <div class="property-item">
+                <div class="property-label">Permissions</div>
+                <div class="property-value">Free for personal and commercial use</div>
+            </div>
+        </div>
+        <p class="text-secondary mt-4" style="font-size: var(--text-sm); line-height: 1.6;">
+            Permission is hereby granted, free of charge, to any person obtaining a copy of this software
+            and associated documentation files, to deal in the Software without restriction, including
+            without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+            and/or sell copies of the Software.
+        </p>
+    </div>
+
+    <!-- Credits Section -->
+    <div class="about-section">
+        <div class="about-section-title">Credits</div>
+        <div class="property-grid">
+            <div class="property-item">
+                <div class="property-label">Inspired By</div>
+                <div class="property-value"><a href="https://github.com/astoeckel/femtosip" target="_blank" rel="noopener">FemtoSIP</a> by Andreas Stoeckel</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Copyright -->
+    <div class="about-copyright">
+        <p>&copy; {{ year }} Jordi Boehme. All rights reserved.</p>
+        <p class="mt-2">
+            Made with <svg style="width: 14px; height: 14px; vertical-align: middle; color: var(--error);"><use href="#icon-heart"></use></svg> for the home automation community.
+        </p>
+    </div>
+</div>
+{% endblock %}

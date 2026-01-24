@@ -3,93 +3,160 @@
 {% block title %}{{ config.name }} - SIPring{% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header">
-        <div>
-            <h1>{{ config.name }}</h1>
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{{ config.name }}</h1>
+        <div class="flex items-center gap-3 mt-2">
             {% if is_ringing %}
-            <span class="status-badge status-ringing">Ringing ({{ ring_state }})</span>
+            <span class="badge badge-info">
+                <span class="status-dot status-dot-info pulse"></span>
+                Ringing ({{ ring_state }})
+            </span>
             {% elif config.enabled %}
-            <span class="status-badge status-enabled">Enabled</span>
+            <span class="badge badge-success">
+                <span class="status-dot status-dot-success"></span>
+                Enabled
+            </span>
             {% else %}
-            <span class="status-badge status-disabled">Disabled</span>
-            {% endif %}
-        </div>
-        <div>
-            <button class="btn btn-primary" onclick="triggerRing('{{ ring_url }}', this)">
-                Ring Now
-            </button>
-            {% if is_ringing %}
-            <button class="btn btn-secondary" onclick="triggerRing('{{ cancel_url }}', this)">
-                Cancel
-            </button>
+            <span class="badge badge-warning">
+                <span class="status-dot status-dot-warning"></span>
+                Disabled
+            </span>
             {% endif %}
         </div>
     </div>
-
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0;">
-        <div>
-            <label style="color: var(--text-secondary); font-size: 12px;">SIP Target</label>
-            <div>{{ config.sip_user }}@{{ config.sip_server }}:{{ config.sip_port }}</div>
-        </div>
-        <div>
-            <label style="color: var(--text-secondary); font-size: 12px;">Caller ID</label>
-            <div>{{ config.caller_name }} ({{ config.caller_user }})</div>
-        </div>
-        <div>
-            <label style="color: var(--text-secondary); font-size: 12px;">Ring Duration</label>
-            <div>{{ config.ring_duration }} seconds</div>
-        </div>
-        <div>
-            <label style="color: var(--text-secondary); font-size: 12px;">Local Port</label>
-            <div>{{ config.local_port }}</div>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label>Ring URL</label>
-        <div class="url-box">
-            <code>{{ ring_url }}</code>
-            <button onclick="copyToClipboard('{{ ring_url }}', this)">Copy</button>
-        </div>
-    </div>
-
-    <div class="form-group">
-        <label>Cancel URL</label>
-        <div class="url-box">
-            <code>{{ cancel_url }}</code>
-            <button onclick="copyToClipboard('{{ cancel_url }}', this)">Copy</button>
-        </div>
-    </div>
-
-    {% if config.last_ring_at %}
-    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border);">
-        <h3 style="margin-bottom: 10px; color: var(--text-secondary);">Last Ring</h3>
-        <div>{{ config.last_ring_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</div>
-        {% if config.last_ring_status %}
-        <div>Status: {{ config.last_ring_status }}</div>
+    <div class="page-actions">
+        <button class="btn btn-primary" onclick="triggerRing('{{ ring_url }}', this)">
+            <svg><use href="#icon-bell"></use></svg>
+            Ring Now
+        </button>
+        {% if is_ringing %}
+        <button class="btn btn-secondary" onclick="triggerRing('{{ cancel_url }}', this)">
+            <svg><use href="#icon-stop"></use></svg>
+            Cancel
+        </button>
         {% endif %}
     </div>
-    {% endif %}
+</div>
 
-    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border);">
-        <label style="color: var(--text-secondary); font-size: 12px;">Configuration ID</label>
-        <div style="font-family: monospace; font-size: 14px;">{{ config.id }}</div>
-        {% if config.slug %}
-        <label style="color: var(--text-secondary); font-size: 12px; margin-top: 10px; display: block;">Slug</label>
-        <div>{{ config.slug }}</div>
+<div class="card">
+    <div class="card-body">
+        <!-- Configuration Details -->
+        <div class="detail-section">
+            <div class="detail-section-title">Configuration</div>
+            <div class="property-grid">
+                <div class="property-item">
+                    <div class="property-label">SIP Target</div>
+                    <div class="property-value">{{ config.sip_user }}@{{ config.sip_server }}:{{ config.sip_port }}</div>
+                </div>
+                <div class="property-item">
+                    <div class="property-label">Caller ID</div>
+                    <div class="property-value">{{ config.caller_name }} ({{ config.caller_user }})</div>
+                </div>
+                <div class="property-item">
+                    <div class="property-label">Ring Duration</div>
+                    <div class="property-value">{{ config.ring_duration }} seconds</div>
+                </div>
+                <div class="property-item">
+                    <div class="property-label">Local Port</div>
+                    <div class="property-value">{{ config.local_port }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- URLs Section -->
+        <div class="detail-section">
+            <div class="detail-section-title">Trigger URLs</div>
+
+            <div class="url-section">
+                <div class="url-label">Ring URL</div>
+                <div class="code-box">
+                    <code>{{ ring_url }}</code>
+                    <button class="btn-copy" onclick="copyToClipboard('{{ ring_url }}', this)" title="Copy URL">
+                        <svg><use href="#icon-copy"></use></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="url-section">
+                <div class="url-label">Cancel URL</div>
+                <div class="code-box">
+                    <code>{{ cancel_url }}</code>
+                    <button class="btn-copy" onclick="copyToClipboard('{{ cancel_url }}', this)" title="Copy URL">
+                        <svg><use href="#icon-copy"></use></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {% if config.last_ring_at %}
+        <!-- Last Ring Section -->
+        <div class="detail-section">
+            <div class="detail-section-title">Last Ring</div>
+            <div class="property-grid">
+                <div class="property-item">
+                    <div class="property-label">Time</div>
+                    <div class="property-value">{{ config.last_ring_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</div>
+                </div>
+                {% if config.last_ring_status %}
+                <div class="property-item">
+                    <div class="property-label">Status</div>
+                    <div class="property-value">{{ config.last_ring_status }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
         {% endif %}
-        <label style="color: var(--text-secondary); font-size: 12px; margin-top: 10px; display: block;">Created</label>
-        <div>{{ config.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</div>
-    </div>
 
-    <div style="margin-top: 30px; display: flex; gap: 10px;">
-        <button class="btn btn-success" onclick="testRing('{{ config.id }}', this)">Test (3s)</button>
-        <a href="/config/{{ config.slug or config.id }}/edit" class="btn btn-secondary">Edit</a>
-        <button class="btn btn-secondary" onclick="cloneConfig('{{ config.id }}')">Clone</button>
-        <button class="btn btn-secondary" style="color: var(--accent);"
-                onclick="deleteConfig('{{ config.id }}', '{{ config.name }}')">Delete</button>
-        <a href="/" class="btn btn-secondary">Back</a>
+        <!-- Metadata Section -->
+        <div class="detail-section mb-0">
+            <div class="detail-section-title">Metadata</div>
+            <div class="property-grid">
+                <div class="property-item">
+                    <div class="property-label">Configuration ID</div>
+                    <div class="property-value mono">{{ config.id }}</div>
+                </div>
+                {% if config.slug %}
+                <div class="property-item">
+                    <div class="property-label">Slug</div>
+                    <div class="property-value">{{ config.slug }}</div>
+                </div>
+                {% endif %}
+                <div class="property-item">
+                    <div class="property-label">Created</div>
+                    <div class="property-value">{{ config.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Action Bar -->
+<div class="action-bar">
+    <div class="action-bar-left">
+        <button class="btn btn-success" onclick="testRing('{{ config.id }}', this)">
+            <svg><use href="#icon-test"></use></svg>
+            Test (3s)
+        </button>
+        <a href="/config/{{ config.slug or config.id }}/edit" class="btn btn-secondary">
+            <svg><use href="#icon-edit"></use></svg>
+            Edit
+        </a>
+        <button class="btn btn-secondary" onclick="cloneConfig('{{ config.id }}')">
+            <svg><use href="#icon-clone"></use></svg>
+            Clone
+        </button>
+        <button class="btn btn-danger" onclick="deleteConfig('{{ config.id }}', '{{ config.name }}')">
+            <svg><use href="#icon-trash"></use></svg>
+            Delete
+        </button>
+    </div>
+    <div class="action-bar-right">
+        <a href="/" class="btn btn-ghost">
+            <svg><use href="#icon-arrow-left"></use></svg>
+            Back to Dashboard
+        </a>
     </div>
 </div>
 {% endblock %}

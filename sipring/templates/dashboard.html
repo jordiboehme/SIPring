@@ -3,94 +3,152 @@
 {% block title %}Dashboard - SIPring{% endblock %}
 
 {% block content %}
-<div class="card-header" style="margin-bottom: 20px;">
-    <h1>Ring Configurations</h1>
-    <a href="/config/new" class="btn btn-primary">+ New Configuration</a>
+<!-- Page Header -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Ring Configurations</h1>
+        <p class="page-subtitle">Manage your SIP ring triggers</p>
+    </div>
+    <div class="page-actions">
+        <a href="/config/new" class="btn btn-primary">
+            <svg><use href="#icon-plus"></use></svg>
+            New Configuration
+        </a>
+    </div>
+</div>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Total Configurations</div>
+        <div class="stat-value">{{ configs|length }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Active Rings</div>
+        <div class="stat-value has-pulse">
+            {{ active_count }}
+            {% if active_count > 0 %}
+            <span class="status-dot status-dot-success pulse"></span>
+            {% endif %}
+        </div>
+    </div>
 </div>
 
 {% if active_count > 0 %}
-<div class="alert alert-success">
-    {{ active_count }} ring{% if active_count > 1 %}s{% endif %} currently active
+<div class="alert alert-info">
+    <svg><use href="#icon-bell"></use></svg>
+    <div class="alert-content">
+        <div class="alert-message">{{ active_count }} ring{% if active_count > 1 %}s{% endif %} currently active</div>
+    </div>
 </div>
 {% endif %}
 
 {% if configs %}
-<div class="configs-grid">
+<!-- Config Cards Grid -->
+<div class="card-grid">
     {% for item in configs %}
     <div class="card">
         <div class="card-header">
-            <div>
+            <div class="card-header-left">
                 <span class="card-title">{{ item.config.name }}</span>
                 {% if item.is_ringing %}
-                <span class="status-badge status-ringing">Ringing</span>
+                <span class="badge badge-info">
+                    <span class="status-dot status-dot-info pulse"></span>
+                    Ringing
+                </span>
                 {% elif item.config.enabled %}
-                <span class="status-badge status-enabled">Enabled</span>
+                <span class="badge badge-success">
+                    <span class="status-dot status-dot-success"></span>
+                    Enabled
+                </span>
                 {% else %}
-                <span class="status-badge status-disabled">Disabled</span>
+                <span class="badge badge-warning">
+                    <span class="status-dot status-dot-warning"></span>
+                    Disabled
+                </span>
                 {% endif %}
             </div>
-            <div>
-                <button class="btn btn-primary btn-small" onclick="triggerRing('{{ item.ring_url }}', this)">
+            <div class="card-actions">
+                <button class="btn btn-primary btn-sm" onclick="triggerRing('{{ item.ring_url }}', this)">
+                    <svg><use href="#icon-bell"></use></svg>
                     Ring
                 </button>
-                <button class="btn btn-secondary btn-small" onclick="testRing('{{ item.config.id }}', this)">
+                <button class="btn btn-secondary btn-sm" onclick="testRing('{{ item.config.id }}', this)">
+                    <svg><use href="#icon-test"></use></svg>
                     Test
                 </button>
             </div>
         </div>
 
-        <div style="margin-bottom: 15px; color: var(--text-secondary); font-size: 14px;">
-            <div>Target: {{ item.config.sip_user }}@{{ item.config.sip_server }}:{{ item.config.sip_port }}</div>
-            <div>Caller: {{ item.config.caller_name }}</div>
-            <div>Duration: {{ item.config.ring_duration }}s</div>
-        </div>
-
-        <div class="form-group" style="margin-bottom: 10px;">
-            <label>Ring URL</label>
-            <div class="url-box">
-                <code>{{ item.ring_url }}</code>
-                <button onclick="copyToClipboard('{{ item.ring_url }}', this)">Copy</button>
+        <div class="card-body">
+            <div class="config-info">
+                <div class="config-info-row">
+                    <span class="config-info-label">Target:</span>
+                    <span>{{ item.config.sip_user }}@{{ item.config.sip_server }}:{{ item.config.sip_port }}</span>
+                </div>
+                <div class="config-info-row">
+                    <span class="config-info-label">Caller:</span>
+                    <span>{{ item.config.caller_name }}</span>
+                </div>
+                <div class="config-info-row">
+                    <span class="config-info-label">Duration:</span>
+                    <span>{{ item.config.ring_duration }}s</span>
+                </div>
             </div>
-        </div>
 
-        {% if item.config.last_ring_at %}
-        <div class="timestamp">
-            Last ring: {{ item.config.last_ring_at.strftime('%Y-%m-%d %H:%M:%S') }}
-            {% if item.config.last_ring_status %}
-            ({{ item.config.last_ring_status }})
+            <div class="url-section">
+                <div class="url-label">Ring URL</div>
+                <div class="code-box">
+                    <code>{{ item.ring_url }}</code>
+                    <button class="btn-copy" onclick="copyToClipboard('{{ item.ring_url }}', this)" title="Copy URL">
+                        <svg><use href="#icon-copy"></use></svg>
+                    </button>
+                </div>
+            </div>
+
+            {% if item.config.last_ring_at %}
+            <div class="config-timestamp">
+                Last ring: {{ item.config.last_ring_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                {% if item.config.last_ring_status %}
+                ({{ item.config.last_ring_status }})
+                {% endif %}
+            </div>
             {% endif %}
         </div>
-        {% endif %}
 
-        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border);">
-            <a href="/config/{{ item.config.slug or item.config.id }}" class="btn btn-secondary btn-small">View</a>
-            <a href="/config/{{ item.config.slug or item.config.id }}/edit" class="btn btn-secondary btn-small">Edit</a>
-            <button class="btn btn-secondary btn-small" onclick="cloneConfig('{{ item.config.id }}')">Clone</button>
-            <button class="btn btn-secondary btn-small" style="color: var(--accent);"
-                    onclick="deleteConfig('{{ item.config.id }}', '{{ item.config.name }}')">Delete</button>
+        <div class="card-footer">
+            <a href="/config/{{ item.config.slug or item.config.id }}" class="btn btn-ghost btn-sm">
+                <svg><use href="#icon-eye"></use></svg>
+                View
+            </a>
+            <a href="/config/{{ item.config.slug or item.config.id }}/edit" class="btn btn-ghost btn-sm">
+                <svg><use href="#icon-edit"></use></svg>
+                Edit
+            </a>
+            <button class="btn btn-ghost btn-sm" onclick="cloneConfig('{{ item.config.id }}')">
+                <svg><use href="#icon-clone"></use></svg>
+                Clone
+            </button>
+            <button class="btn btn-ghost btn-sm text-error" onclick="deleteConfig('{{ item.config.id }}', '{{ item.config.name }}')">
+                <svg><use href="#icon-trash"></use></svg>
+                Delete
+            </button>
         </div>
     </div>
     {% endfor %}
 </div>
 {% else %}
-<div class="empty-state">
-    <h2>No configurations yet</h2>
-    <p>Create your first ring configuration to get started.</p>
-    <a href="/config/new" class="btn btn-primary" style="margin-top: 20px;">Create Configuration</a>
+<!-- Empty State -->
+<div class="card">
+    <div class="empty-state">
+        <svg><use href="#icon-inbox"></use></svg>
+        <h2 class="empty-state-title">No configurations yet</h2>
+        <p class="empty-state-message">Create your first ring configuration to get started.</p>
+        <a href="/config/new" class="btn btn-primary">
+            <svg><use href="#icon-plus"></use></svg>
+            Create Configuration
+        </a>
+    </div>
 </div>
 {% endif %}
-
-<style>
-    .configs-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-        gap: 20px;
-    }
-
-    @media (max-width: 500px) {
-        .configs-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
 {% endblock %}

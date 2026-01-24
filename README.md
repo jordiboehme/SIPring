@@ -2,10 +2,12 @@
 
 A Docker-based SIP phone ringing service for triggering alerts via HTTP requests. Perfect for doorbell notifications, alert systems, or any scenario where you want to ring a SIP phone programmatically.
 
+![SIPring Dashboard](docs/images/dashboard.png)
+
 ## Features
 
 - **Simple HTTP API** - Trigger rings with a single GET request
-- **Web Dashboard** - Manage configurations through a modern web interface
+- **Web Dashboard** - Manage configurations through a modern dark/light theme interface
 - **Multiple Configurations** - Set up different ring profiles for various scenarios
 - **Caller ID Support** - Display custom caller names on the phone
 - **Cancellation** - Stop ringing before timeout or if answered
@@ -16,7 +18,7 @@ A Docker-based SIP phone ringing service for triggering alerts via HTTP requests
 ### Using Docker (Recommended)
 
 ```bash
-git clone https://github.com/yourusername/sipring.git
+git clone https://github.com/jordiboehme/sipring.git
 cd sipring/docker
 docker compose up -d
 ```
@@ -28,7 +30,7 @@ The web interface will be available at `http://localhost:8080`
 ### Manual Installation
 
 ```bash
-git clone https://github.com/yourusername/sipring.git
+git clone https://github.com/jordiboehme/sipring.git
 cd sipring
 pip install -e .
 uvicorn sipring.main:app --host 0.0.0.0 --port 8080

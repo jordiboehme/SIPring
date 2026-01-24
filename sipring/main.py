@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="SIPring",
     description="SIP phone ringing service for triggering alerts via HTTP",
-    version="0.1.0",
+    version="0.2.0",
     lifespan=lifespan,
 )
 
@@ -201,6 +201,18 @@ async def config_detail(request: Request, id_or_slug: str, _: bool = Depends(opt
             "cancel_url": f"{base_url}/ring/{identifier}/cancel",
             "is_ringing": ring_manager.is_active(config.id),
             "ring_state": ring_manager.get_state(config.id),
+        }
+    )
+
+
+@app.get("/about", response_class=HTMLResponse)
+async def about_page(request: Request, _: bool = Depends(optional_auth)):
+    """About page with version, license, and credits."""
+    from datetime import datetime
+    return templates.TemplateResponse(
+        request, "about.html", {
+            "version": app.version,
+            "year": datetime.now().year,
         }
     )
 
