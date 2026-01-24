@@ -65,6 +65,7 @@
         <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--border);">
             <a href="/config/{{ item.config.slug or item.config.id }}" class="btn btn-secondary btn-small">View</a>
             <a href="/config/{{ item.config.slug or item.config.id }}/edit" class="btn btn-secondary btn-small">Edit</a>
+            <button class="btn btn-secondary btn-small" onclick="cloneConfig('{{ item.config.id }}')">Clone</button>
             <button class="btn btn-secondary btn-small" style="color: var(--accent);"
                     onclick="deleteConfig('{{ item.config.id }}', '{{ item.config.name }}')">Delete</button>
         </div>

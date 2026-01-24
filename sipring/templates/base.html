@@ -339,6 +339,23 @@
                 });
         }
 
+        function cloneConfig(configId) {
+            fetch(`/api/configs/${configId}/clone`, { method: 'POST' })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Failed to clone configuration');
+                    }
+                })
+                .then(data => {
+                    window.location.href = `/config/${data.slug || data.id}/edit`;
+                })
+                .catch(error => {
+                    alert(error.message);
+                });
+        }
+
         function deleteConfig(configId, name) {
             if (!confirm(`Delete configuration "${name}"?`)) return;
 

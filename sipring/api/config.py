@@ -110,6 +110,43 @@ async def delete_config(id_or_slug: str):
     logger.info(f"Deleted config: {config.id}")
 
 
+@router.post("/{id_or_slug}/clone", response_model=RingConfigResponse, status_code=201)
+async def clone_config(id_or_slug: str, request: Request):
+    """
+    Clone an existing ring configuration.
+
+    Creates a copy with a new UUID and modified name/slug.
+    """
+    storage = get_storage()
+
+    try:
+        config = storage.get_config(id_or_slug)
+    except ConfigNotFoundError:
+        raise HTTPException(status_code=404, detail=f"Configuration not found: {id_or_slug}")
+
+    # Create clone data with modified name and slug
+    clone_data = RingConfigCreate(
+        name=f"{config.name} (Copy)",
+        slug=f"{config.slug}-copy" if config.slug else None,
+        sip_user=config.sip_user,
+        sip_server=config.sip_server,
+        sip_port=config.sip_port,
+        caller_name=config.caller_name,
+        caller_user=config.caller_user,
+        ring_duration=config.ring_duration,
+        local_port=config.local_port,
+        enabled=config.enabled,
+    )
+
+    try:
+        new_config = storage.create_config(clone_data)
+    except StorageError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    logger.info(f"Cloned config {config.id} to {new_config.id}")
+    return config_to_response(new_config, request)
+
+
 @router.post("/{id_or_slug}/test", response_model=RingResponse)
 async def test_config(id_or_slug: str, duration: int = 3):
     """
