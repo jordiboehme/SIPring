@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="SIPring",
     description="SIP phone ringing service for triggering alerts via HTTP",
-    version="0.2.0",
+    version="0.2.1",
     lifespan=lifespan,
 )
 

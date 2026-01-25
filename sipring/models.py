@@ -29,7 +29,7 @@ class RingConfigBase(BaseModel):
     sip_server: str = Field(..., min_length=1, max_length=255, description="SIP server hostname/IP")
     sip_port: int = Field(5060, ge=1, le=65535, description="SIP server port")
     caller_name: str = Field(..., min_length=1, max_length=100, description="Caller display name")
-    caller_user: str = Field("doorbell", max_length=100, description="Caller SIP user")
+    caller_user: str = Field("107", max_length=100, description="Caller SIP user")
     ring_duration: int = Field(30, ge=1, le=300, description="Max ring duration in seconds")
     local_port: int = Field(5062, ge=1024, le=65535, description="Local UDP port for SIP")
     enabled: bool = Field(True, description="Whether this config is enabled")

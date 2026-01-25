@@ -78,8 +78,9 @@
                     <div class="form-group">
                         <label for="caller_user" class="form-label">Caller SIP User</label>
                         <input type="text" id="caller_user" name="caller_user" class="form-control"
-                               value="{{ config.caller_user if config else 'doorbell' }}"
-                               placeholder="e.g., doorbell">
+                               value="{{ config.caller_user if config else '107' }}"
+                               placeholder="e.g., 107">
+                        <div class="form-hint">Using a numeric value instead of a string may prevent issues with some SIP systems</div>
                     </div>
                 </div>
             </div>

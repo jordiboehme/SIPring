@@ -103,7 +103,7 @@ curl -X DELETE http://localhost:8080/api/configs/front-door
 | `sip_server`    | Yes      | -        | SIP server hostname or IP                          |
 | `sip_port`      | No       | 5060     | SIP server port                                    |
 | `caller_name`   | Yes      | -        | Caller ID display name                             |
-| `caller_user`   | No       | doorbell | Caller SIP user                                    |
+| `caller_user`   | No       | 107      | Caller SIP user (numeric recommended)              |
 | `ring_duration` | No       | 30       | Maximum ring duration in seconds                   |
 | `local_port`    | No       | 5062     | Local UDP port for SIP                             |
 | `enabled`       | No       | true     | Whether this config is active                      |
