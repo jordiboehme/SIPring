@@ -950,6 +950,14 @@ textarea.form-control {
     animation: toast-in 0.3s ease;
 }
 
+.toast svg {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
+    flex-shrink: 0;
+}
+
 .toast.toast-out {
     animation: toast-out 0.3s ease forwards;
 }
