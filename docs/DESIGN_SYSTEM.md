@@ -174,6 +174,45 @@ Then reference with just the hash:
 }
 ```
 
+### 6. Mobile Sidebar Labels Not Visible
+
+**Problem**: On mobile (especially iOS), when the sidebar opens via `.mobile-open`, labels remain invisible because opacity rules only target `:hover` and `.expanded`.
+
+**Solution**: Add `.sidebar.mobile-open` to ALL visibility rules:
+
+```css
+/* Must add .mobile-open to each of these selectors */
+.sidebar:hover .sidebar-logo span,
+.sidebar.expanded .sidebar-logo span,
+.sidebar.mobile-open .sidebar-logo span {
+    opacity: 1;
+}
+
+.sidebar:hover .sidebar-nav-item span,
+.sidebar.expanded .sidebar-nav-item span,
+.sidebar.mobile-open .sidebar-nav-item span {
+    opacity: 1;
+}
+
+.sidebar:hover .sidebar-version,
+.sidebar.expanded .sidebar-version,
+.sidebar.mobile-open .sidebar-version {
+    opacity: 1;
+}
+
+.sidebar:hover .theme-toggle-track,
+.sidebar.expanded .theme-toggle-track,
+.sidebar.mobile-open .theme-toggle-track {
+    opacity: 1;
+}
+
+.sidebar:hover .theme-toggle-label,
+.sidebar.expanded .theme-toggle-label,
+.sidebar.mobile-open .theme-toggle-label {
+    opacity: 1;
+}
+```
+
 ---
 
 ## Color Palette
