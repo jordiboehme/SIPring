@@ -2,6 +2,8 @@
 
 A Docker-based SIP phone ringing service for triggering alerts via HTTP requests. Perfect for doorbell notifications, alert systems, or any scenario where you want to ring a SIP phone programmatically.
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/V7V31T6CL9)
+
 ![SIPring Dashboard](docs/images/dashboard.png)
 
 ## Features
