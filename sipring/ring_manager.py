@@ -38,7 +38,7 @@ class RingManager:
         sip_port: int,
         caller_name: str,
         caller_user: str,
-        ring_duration: int,
+        ring_duration: float,
         local_port: int,
     ) -> bool:
         """
@@ -78,7 +78,7 @@ class RingManager:
         self,
         config_id: UUID,
         client: SIPClient,
-        duration: int,
+        duration: float,
     ) -> CallResult:
         """Execute ring and update status."""
         try:
@@ -87,7 +87,7 @@ class RingManager:
                     self._active_calls[config_id].state = state
 
             result = await client.ring(
-                duration=float(duration),
+                duration=duration,
                 on_state_change=on_state_change,
             )
 

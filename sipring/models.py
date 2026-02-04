@@ -30,7 +30,7 @@ class RingConfigBase(BaseModel):
     sip_port: int = Field(5060, ge=1, le=65535, description="SIP server port")
     caller_name: str = Field(..., min_length=1, max_length=100, description="Caller display name")
     caller_user: str = Field("107", max_length=100, description="Caller SIP user")
-    ring_duration: int = Field(30, ge=1, le=300, description="Max ring duration in seconds")
+    ring_duration: float = Field(30, ge=0.1, le=300, description="Max ring duration in seconds")
     local_port: int = Field(5062, ge=1024, le=65535, description="Local UDP port for SIP")
     enabled: bool = Field(True, description="Whether this config is enabled")
 
@@ -66,7 +66,7 @@ class RingConfigUpdate(BaseModel):
     sip_port: Optional[int] = Field(None, ge=1, le=65535)
     caller_name: Optional[str] = Field(None, min_length=1, max_length=100)
     caller_user: Optional[str] = Field(None, max_length=100)
-    ring_duration: Optional[int] = Field(None, ge=1, le=300)
+    ring_duration: Optional[float] = Field(None, ge=0.1, le=300)
     local_port: Optional[int] = Field(None, ge=1024, le=65535)
     enabled: Optional[bool] = None
 
