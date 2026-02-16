@@ -106,3 +106,28 @@ class ConfigListResponse(BaseModel):
 
     configs: list[RingConfigResponse]
     count: int
+
+
+class RingEvent(BaseModel):
+    """A single ring event log entry."""
+
+    id: UUID = Field(default_factory=uuid4, description="Unique event identifier")
+    timestamp: datetime = Field(default_factory=utc_now, description="When the ring was triggered")
+    completed_at: Optional[datetime] = Field(None, description="When the ring finished")
+    config_id: UUID = Field(..., description="Configuration that was triggered")
+    config_name: str = Field(..., description="Config name snapshot")
+    config_slug: Optional[str] = Field(None, description="Config slug snapshot")
+    duration: float = Field(..., description="Requested ring duration (seconds)")
+    duration_actual: Optional[float] = Field(None, description="Actual ring duration (seconds)")
+    result: Optional[str] = Field(None, description="Outcome: cancelled, answered, timeout, error, busy")
+    source_ip: Optional[str] = Field(None, description="IP of the HTTP client")
+    source_user: Optional[str] = Field(None, description="Authenticated username")
+    trigger_type: str = Field("ring", description="'ring' or 'test'")
+
+
+class RingEventResponse(BaseModel):
+    """Response model for listing ring events."""
+
+    events: list[RingEvent]
+    count: int
+    total: int

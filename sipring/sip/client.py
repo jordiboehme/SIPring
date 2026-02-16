@@ -30,14 +30,23 @@ class CallResult(str, Enum):
     BUSY = "busy"
 
 
+_local_ip_cache: dict[tuple[str, int], str] = {}
+
+
 def get_local_ip(target_host: str, target_port: int) -> str:
-    """Determine local IP address that can reach the target."""
+    """Determine local IP address that can reach the target (cached)."""
+    key = (target_host, target_port)
+    cached = _local_ip_cache.get(key)
+    if cached is not None:
+        return cached
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
         sock.connect((target_host, target_port))
-        return sock.getsockname()[0]
+        ip = sock.getsockname()[0]
     finally:
         sock.close()
+    _local_ip_cache[key] = ip
+    return ip
 
 
 class SIPProtocol(asyncio.DatagramProtocol):

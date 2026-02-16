@@ -4,13 +4,14 @@ import fcntl
 import json
 import logging
 import os
+import tempfile
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from uuid import UUID
 
 from .config import get_settings
-from .models import RingConfig, RingConfigCreate, RingConfigUpdate
+from .models import RingConfig, RingConfigCreate, RingConfigUpdate, RingEvent
 
 logger = logging.getLogger(__name__)
 
@@ -30,6 +31,10 @@ class ConfigStorage:
 
     def __init__(self, file_path: Optional[str] = None):
         self.file_path = file_path or get_settings().config_file
+        self._cache: Optional[list[RingConfig]] = None
+
+    def _invalidate_cache(self) -> None:
+        self._cache = None
 
     def _ensure_dir(self) -> None:
         """Ensure data directory exists."""
@@ -84,9 +89,13 @@ class ConfigStorage:
         return RingConfig(**data)
 
     def list_configs(self) -> list[RingConfig]:
-        """List all configurations."""
+        """List all configurations (cached in memory)."""
+        if self._cache is not None:
+            return list(self._cache)
         data = self._read_data()
-        return [self._config_from_dict(c) for c in data.get("configs", [])]
+        configs = [self._config_from_dict(c) for c in data.get("configs", [])]
+        self._cache = configs
+        return list(configs)
 
     def get_config(self, id_or_slug: str) -> RingConfig:
         """Get configuration by UUID or slug."""
@@ -130,6 +139,7 @@ class ConfigStorage:
         configs.append(config.model_dump(mode='json'))
         data["configs"] = configs
         self._write_data(data)
+        self._invalidate_cache()
 
         logger.info(f"Created config: {config.id} ({config.name})")
         return config
@@ -171,6 +181,7 @@ class ConfigStorage:
         configs[config_idx] = existing
         data["configs"] = configs
         self._write_data(data)
+        self._invalidate_cache()
 
         logger.info(f"Updated config: {existing['id']}")
         return self._config_from_dict(existing)
@@ -202,6 +213,7 @@ class ConfigStorage:
 
         data["configs"] = new_configs
         self._write_data(data)
+        self._invalidate_cache()
 
     def update_ring_status(
         self,
@@ -228,10 +240,148 @@ class ConfigStorage:
 
         data["configs"] = configs
         self._write_data(data)
+        self._invalidate_cache()
 
 
-# Global storage instance
+class EventStorage:
+    """JSONL file storage for ring events."""
+
+    def __init__(self, file_path: Optional[str] = None):
+        self.file_path = file_path or get_settings().events_file
+        self._last_pruned_at: Optional[datetime] = None
+
+    def _ensure_dir(self) -> None:
+        dir_path = os.path.dirname(self.file_path)
+        if dir_path and not os.path.exists(dir_path):
+            os.makedirs(dir_path, exist_ok=True)
+
+    def append_event(self, event: RingEvent) -> None:
+        """Append a single event to the JSONL file."""
+        self._ensure_dir()
+        line = event.model_dump_json() + "\n"
+        with open(self.file_path, "a") as f:
+            try:
+                fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+                f.write(line)
+            finally:
+                fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+        self._maybe_prune()
+
+    def prune_events(self) -> int:
+        """Remove events older than retention period. Returns number of pruned events."""
+        retention_days = get_settings().event_retention_days
+        if retention_days == 0:
+            logger.debug("Event retention disabled (0), skipping prune")
+            return 0
+
+        if not os.path.exists(self.file_path):
+            return 0
+
+        cutoff = datetime.now(timezone.utc) - timedelta(days=retention_days)
+        kept_lines: list[str] = []
+        total = 0
+
+        with open(self.file_path, "r") as f:
+            try:
+                fcntl.flock(f.fileno(), fcntl.LOCK_SH)
+                for line in f:
+                    stripped = line.strip()
+                    if not stripped:
+                        continue
+                    total += 1
+                    try:
+                        data = json.loads(stripped)
+                        ts = datetime.fromisoformat(data["timestamp"])
+                        if ts >= cutoff:
+                            kept_lines.append(stripped + "\n")
+                    except Exception:
+                        kept_lines.append(stripped + "\n")
+            finally:
+                fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+
+        pruned = total - len(kept_lines)
+        if pruned == 0:
+            self._last_pruned_at = datetime.now(timezone.utc)
+            return 0
+
+        # Atomic rewrite: write to temp file then rename
+        dir_path = os.path.dirname(self.file_path)
+        fd, tmp_path = tempfile.mkstemp(dir=dir_path, suffix=".tmp")
+        try:
+            with os.fdopen(fd, "w") as tmp:
+                tmp.writelines(kept_lines)
+            os.replace(tmp_path, self.file_path)
+        except Exception:
+            os.unlink(tmp_path)
+            raise
+
+        self._last_pruned_at = datetime.now(timezone.utc)
+        logger.info(f"Pruned {pruned} events older than {retention_days} days ({len(kept_lines)} kept)")
+        return pruned
+
+    def _maybe_prune(self) -> None:
+        """Prune if last prune was more than 24 hours ago."""
+        now = datetime.now(timezone.utc)
+        if self._last_pruned_at is not None and (now - self._last_pruned_at) < timedelta(hours=24):
+            return
+        try:
+            self.prune_events()
+        except Exception:
+            logger.exception("Failed to prune events")
+
+    def list_events(
+        self,
+        config_id: Optional[UUID] = None,
+        since: Optional[datetime] = None,
+        until: Optional[datetime] = None,
+        result: Optional[str] = None,
+        trigger_type: Optional[str] = None,
+        limit: int = 50,
+        offset: int = 0,
+    ) -> tuple[list[RingEvent], int]:
+        """Read events, filter, sort newest-first, paginate. Returns (events, total)."""
+        if not os.path.exists(self.file_path):
+            return [], 0
+
+        events: list[RingEvent] = []
+        with open(self.file_path, "r") as f:
+            try:
+                fcntl.flock(f.fileno(), fcntl.LOCK_SH)
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        event = RingEvent.model_validate_json(line)
+                        events.append(event)
+                    except Exception:
+                        logger.warning("Skipping malformed event line")
+            finally:
+                fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+
+        # Filter
+        if config_id is not None:
+            events = [e for e in events if e.config_id == config_id]
+        if since is not None:
+            events = [e for e in events if e.timestamp >= since]
+        if until is not None:
+            events = [e for e in events if e.timestamp <= until]
+        if result is not None:
+            events = [e for e in events if e.result == result]
+        if trigger_type is not None:
+            events = [e for e in events if e.trigger_type == trigger_type]
+
+        # Sort newest first
+        events.sort(key=lambda e: e.timestamp, reverse=True)
+
+        total = len(events)
+        events = events[offset:offset + limit]
+        return events, total
+
+
+# Global storage instances
 _storage: Optional[ConfigStorage] = None
+_event_storage: Optional[EventStorage] = None
 
 
 def get_storage() -> ConfigStorage:
@@ -240,3 +390,11 @@ def get_storage() -> ConfigStorage:
     if _storage is None:
         _storage = ConfigStorage()
     return _storage
+
+
+def get_event_storage() -> EventStorage:
+    """Get event storage instance."""
+    global _event_storage
+    if _event_storage is None:
+        _event_storage = EventStorage()
+    return _event_storage

@@ -12,8 +12,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from .config import get_settings
-from .api import ring_router, config_router
-from .storage import get_storage
+from .api import ring_router, config_router, events_router
+from .storage import get_storage, get_event_storage
 from .ring_manager import get_ring_manager
 
 # Configure logging
@@ -30,6 +30,7 @@ async def lifespan(app: FastAPI):
     """Lifespan context manager for startup/shutdown."""
     logger.info(f"SIPring starting, data dir: {settings.data_dir}")
     get_storage()
+    get_event_storage().prune_events()
     yield
     logger.info("SIPring shutting down")
 
@@ -52,6 +53,7 @@ if (BASE_DIR / "static").exists():
 # Include API routers
 app.include_router(ring_router)
 app.include_router(config_router)
+app.include_router(events_router)
 
 # Basic auth setup
 security = HTTPBasic()
@@ -147,6 +149,75 @@ async def dashboard(request: Request, _: bool = Depends(optional_auth)):
         request, "dashboard.html", {
             "configs": config_data,
             "active_count": len(active_calls),
+        }
+    )
+
+
+RESULT_BADGE_MAP = {
+    "cancelled": "badge-warning",
+    "answered": "badge-success",
+    "timeout": "badge-info",
+    "error": "badge-error",
+    "busy": "badge-warning",
+}
+
+
+@app.get("/events", response_class=HTMLResponse)
+async def events_page(
+    request: Request,
+    config_id: str = None,
+    range: str = "7d",
+    result: str = None,
+    trigger_type: str = None,
+    limit: int = 50,
+    offset: int = 0,
+    _: bool = Depends(optional_auth),
+):
+    """Event log page."""
+    from datetime import datetime, timedelta, timezone
+    from uuid import UUID as _UUID
+
+    now = datetime.now(timezone.utc)
+    since = None
+    if range == "24h":
+        since = now - timedelta(hours=24)
+    elif range == "7d":
+        since = now - timedelta(days=7)
+    elif range == "30d":
+        since = now - timedelta(days=30)
+
+    parsed_config_id = None
+    if config_id:
+        try:
+            parsed_config_id = _UUID(config_id)
+        except ValueError:
+            pass
+
+    event_storage = get_event_storage()
+    events, total = event_storage.list_events(
+        config_id=parsed_config_id,
+        since=since,
+        result=result or None,
+        trigger_type=trigger_type or None,
+        limit=limit,
+        offset=offset,
+    )
+
+    storage = get_storage()
+    configs = storage.list_configs()
+
+    return templates.TemplateResponse(
+        request, "events.html", {
+            "events": events,
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+            "configs": configs,
+            "filter_range": range,
+            "filter_config_id": config_id or "",
+            "filter_result": result or "",
+            "filter_trigger_type": trigger_type or "",
+            "result_badge_map": RESULT_BADGE_MAP,
         }
     )
 

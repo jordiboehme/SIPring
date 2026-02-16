@@ -306,6 +306,35 @@
     }
 
     // ==========================================================================
+    // Event Log Filtering & Pagination
+    // ==========================================================================
+
+    function filterEvents() {
+        const range = document.getElementById('filter-range').value;
+        const configId = document.getElementById('filter-config').value;
+        const result = document.getElementById('filter-result').value;
+        const triggerType = document.getElementById('filter-type').value;
+
+        const params = new URLSearchParams();
+        if (range) params.set('range', range);
+        if (configId) params.set('config_id', configId);
+        if (result) params.set('result', result);
+        if (triggerType) params.set('trigger_type', triggerType);
+
+        window.location.href = '/events?' + params.toString();
+    }
+
+    window.filterEvents = filterEvents;
+
+    function loadPage(offset) {
+        const params = new URLSearchParams(window.location.search);
+        params.set('offset', offset);
+        window.location.href = '/events?' + params.toString();
+    }
+
+    window.loadPage = loadPage;
+
+    // ==========================================================================
     // Keyboard Shortcuts
     // ==========================================================================
 

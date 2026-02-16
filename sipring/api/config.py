@@ -1,5 +1,6 @@
 """Configuration CRUD endpoints."""
 
+import base64
 import logging
 from typing import Optional
 from uuid import UUID
@@ -12,6 +13,7 @@ from ..models import (
     RingConfigCreate,
     RingConfigUpdate,
     RingConfigResponse,
+    RingEvent,
     RingResponse,
     ConfigListResponse,
 )
@@ -147,8 +149,27 @@ async def clone_config(id_or_slug: str, request: Request):
     return config_to_response(new_config, request)
 
 
+def _get_source_user(request: Request) -> Optional[str]:
+    """Extract authenticated username from request, if any."""
+    settings = get_settings()
+    if not settings.auth_enabled:
+        return None
+    auth = request.headers.get("Authorization")
+    if not auth:
+        return None
+    try:
+        scheme, credentials = auth.split()
+        if scheme.lower() == "basic":
+            decoded = base64.b64decode(credentials).decode("utf-8")
+            username, _ = decoded.split(":", 1)
+            return username
+    except Exception:
+        pass
+    return None
+
+
 @router.post("/{id_or_slug}/test", response_model=RingResponse)
-async def test_config(id_or_slug: str, duration: int = 3):
+async def test_config(id_or_slug: str, request: Request, duration: int = 3):
     """
     Test a ring configuration with a short ring.
 
@@ -172,6 +193,16 @@ async def test_config(id_or_slug: str, duration: int = 3):
     # Limit test duration
     test_duration = min(duration, 10)
 
+    event = RingEvent(
+        config_id=config.id,
+        config_name=config.name,
+        config_slug=config.slug,
+        duration=test_duration,
+        source_ip=request.client.host if request.client else None,
+        source_user=_get_source_user(request),
+        trigger_type="test",
+    )
+
     started = await ring_manager.start_ring(
         config_id=config.id,
         sip_user=config.sip_user,
@@ -181,6 +212,7 @@ async def test_config(id_or_slug: str, duration: int = 3):
         caller_user=config.caller_user,
         ring_duration=test_duration,
         local_port=config.local_port,
+        event=event,
     )
 
     if not started:

@@ -836,6 +836,21 @@ textarea.form-control {
     border-bottom: none;
 }
 
+/* Filter Bar
+   ========================================================================== */
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    align-items: flex-end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
 /* Alerts
    ========================================================================== */
 .alert {

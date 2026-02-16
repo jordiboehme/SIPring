@@ -1,11 +1,13 @@
 """Ring trigger endpoints."""
 
+import base64
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 
-from ..models import RingResponse
+from ..config import get_settings
+from ..models import RingEvent, RingResponse
 from ..ring_manager import get_ring_manager
 from ..storage import get_storage, ConfigNotFoundError
 
@@ -14,9 +16,29 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["ring"])
 
 
+def _get_source_user(request: Request) -> Optional[str]:
+    """Extract authenticated username from request, if any."""
+    settings = get_settings()
+    if not settings.auth_enabled:
+        return None
+    auth = request.headers.get("Authorization")
+    if not auth:
+        return None
+    try:
+        scheme, credentials = auth.split()
+        if scheme.lower() == "basic":
+            decoded = base64.b64decode(credentials).decode("utf-8")
+            username, _ = decoded.split(":", 1)
+            return username
+    except Exception:
+        pass
+    return None
+
+
 @router.get("/ring/{id_or_slug}", response_model=RingResponse)
 async def trigger_ring(
     id_or_slug: str,
+    request: Request,
     duration: Optional[int] = Query(None, ge=1, le=300, description="Override ring duration"),
     wait: bool = Query(False, description="Wait for ring to complete"),
 ):
@@ -48,6 +70,17 @@ async def trigger_ring(
             message=f"Ring already in progress for {config.name}",
         )
 
+    # Build event
+    event = RingEvent(
+        config_id=config.id,
+        config_name=config.name,
+        config_slug=config.slug,
+        duration=ring_duration,
+        source_ip=request.client.host if request.client else None,
+        source_user=_get_source_user(request),
+        trigger_type="ring",
+    )
+
     # Start the ring
     started = await ring_manager.start_ring(
         config_id=config.id,
@@ -58,6 +91,7 @@ async def trigger_ring(
         caller_user=config.caller_user,
         ring_duration=ring_duration,
         local_port=config.local_port,
+        event=event,
     )
 
     if not started:

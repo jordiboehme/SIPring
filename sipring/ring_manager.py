@@ -7,8 +7,9 @@ from datetime import datetime
 from typing import Dict, Optional
 from uuid import UUID
 
+from .models import RingEvent, utc_now
 from .sip.client import SIPClient, CallResult
-from .storage import get_storage
+from .storage import get_storage, get_event_storage
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,7 @@ class RingManager:
         caller_user: str,
         ring_duration: float,
         local_port: int,
+        event: Optional[RingEvent] = None,
     ) -> bool:
         """
         Start a ring call for a configuration.
@@ -62,7 +64,7 @@ class RingManager:
 
             # Create task for the ring
             task = asyncio.create_task(
-                self._run_ring(config_id, client, ring_duration)
+                self._run_ring(config_id, client, ring_duration, event)
             )
 
             self._active_calls[config_id] = ActiveCall(
@@ -79,6 +81,7 @@ class RingManager:
         config_id: UUID,
         client: SIPClient,
         duration: float,
+        event: Optional[RingEvent] = None,
     ) -> CallResult:
         """Execute ring and update status."""
         try:
@@ -91,12 +94,27 @@ class RingManager:
                 on_state_change=on_state_change,
             )
 
-            # Update storage with result
+            # Update storage with result (in thread to avoid blocking event loop)
             try:
-                storage = get_storage()
-                storage.update_ring_status(str(config_id), result.value)
+                await asyncio.to_thread(
+                    get_storage().update_ring_status, str(config_id), result.value
+                )
             except Exception as e:
                 logger.error(f"Failed to update ring status: {e}")
+
+            # Log event (in thread to avoid blocking event loop)
+            if event:
+                try:
+                    event.completed_at = utc_now()
+                    event.result = result.value
+                    event.duration_actual = (
+                        event.completed_at - event.timestamp
+                    ).total_seconds()
+                    await asyncio.to_thread(
+                        get_event_storage().append_event, event
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to log ring event: {e}")
 
             return result
 

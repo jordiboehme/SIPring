@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     default_local_port: int = 5062
     default_ring_duration: int = 30
 
+    # Event retention
+    event_retention_days: int = 90  # 0 = keep forever
+
     # Logging
     log_level: str = "INFO"
 
@@ -44,6 +47,11 @@ class Settings(BaseSettings):
     def config_file(self) -> str:
         """Path to config.json file."""
         return os.path.join(self.data_dir, "config.json")
+
+    @property
+    def events_file(self) -> str:
+        """Path to events.jsonl file."""
+        return os.path.join(self.data_dir, "events.jsonl")
 
     @property
     def auth_enabled(self) -> bool:
