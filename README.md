@@ -11,6 +11,7 @@ A Docker-based SIP phone ringing service for triggering alerts via HTTP requests
 - **Simple HTTP API** - Trigger rings with a single GET request
 - **Web Dashboard** - Manage configurations through a modern dark/light theme interface
 - **Multiple Configurations** - Set up different ring profiles for various scenarios
+- **Event Log** - Track every ring with metadata, filterable by config, time range, and result
 - **Caller ID Support** - Display custom caller names on the phone
 - **Cancellation** - Stop ringing before timeout or if answered
 - **Docker Ready** - Easy deployment with Docker Compose
@@ -121,6 +122,7 @@ curl -X DELETE http://localhost:8080/api/configs/front-door
 | `SIPRING_LOG_LEVEL` | `INFO`  | Log level (DEBUG, INFO, WARNING, ERROR)                              |
 | `SIPRING_USERNAME`  | -       | Basic auth username (optional)                                       |
 | `SIPRING_PASSWORD`  | -       | Basic auth password (optional)                                       |
+| `SIPRING_EVENT_RETENTION_DAYS` | `90` | Days to keep event history (0 = keep forever)             |
 
 ## Integration Examples
 
