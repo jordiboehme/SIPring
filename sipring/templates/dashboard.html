@@ -108,7 +108,7 @@
 
             {% if item.config.last_ring_at %}
             <div class="config-timestamp">
-                Last ring: {{ item.config.last_ring_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                Last ring: <time datetime="{{ item.config.last_ring_at.isoformat() }}">{{ item.config.last_ring_at.strftime('%Y-%m-%d %H:%M:%S') }} UTC</time>
                 {% if item.config.last_ring_status %}
                 ({{ item.config.last_ring_status }})
                 {% endif %}

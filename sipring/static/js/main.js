@@ -356,6 +356,23 @@
     // Active Nav Item
     // ==========================================================================
 
+    // ==========================================================================
+    // Local Timezone Conversion
+    // ==========================================================================
+
+    document.querySelectorAll('time[datetime]').forEach(el => {
+        const d = new Date(el.getAttribute('datetime'));
+        if (!isNaN(d)) {
+            const pad = n => String(n).padStart(2, '0');
+            el.textContent = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate())
+                + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+        }
+    });
+
+    // ==========================================================================
+    // Active Nav Item
+    // ==========================================================================
+
     const currentPath = window.location.pathname;
     const navItems = document.querySelectorAll('.sidebar-nav-item');
 

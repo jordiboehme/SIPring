@@ -81,7 +81,7 @@
             <tbody>
                 {% for event in events %}
                 <tr>
-                    <td style="white-space: nowrap;">{{ event.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td style="white-space: nowrap;"><time datetime="{{ event.timestamp.isoformat() }}">{{ event.timestamp.strftime('%Y-%m-%d %H:%M:%S') }} UTC</time></td>
                     <td>{{ event.config_name }}</td>
                     <td>
                         {% if event.result %}

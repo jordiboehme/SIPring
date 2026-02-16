@@ -97,7 +97,7 @@
             <div class="property-grid">
                 <div class="property-item">
                     <div class="property-label">Time</div>
-                    <div class="property-value">{{ config.last_ring_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</div>
+                    <div class="property-value"><time datetime="{{ config.last_ring_at.isoformat() }}">{{ config.last_ring_at.strftime('%Y-%m-%d %H:%M:%S') }} UTC</time></div>
                 </div>
                 {% if config.last_ring_status %}
                 <div class="property-item">
@@ -125,7 +125,7 @@
                 {% endif %}
                 <div class="property-item">
                     <div class="property-label">Created</div>
-                    <div class="property-value">{{ config.created_at.strftime('%Y-%m-%d %H:%M:%S UTC') }}</div>
+                    <div class="property-value"><time datetime="{{ config.created_at.isoformat() }}">{{ config.created_at.strftime('%Y-%m-%d %H:%M:%S') }} UTC</time></div>
                 </div>
             </div>
         </div>
