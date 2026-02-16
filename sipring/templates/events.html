@@ -37,6 +37,7 @@
                 <label class="form-label" for="filter-result">Result</label>
                 <select id="filter-result" class="form-control" style="width: auto; min-width: 130px;">
                     <option value="">All results</option>
+                    <option value="completed"{% if filter_result == 'completed' %} selected{% endif %}>Completed</option>
                     <option value="cancelled"{% if filter_result == 'cancelled' %} selected{% endif %}>Cancelled</option>
                     <option value="answered"{% if filter_result == 'answered' %} selected{% endif %}>Answered</option>
                     <option value="timeout"{% if filter_result == 'timeout' %} selected{% endif %}>Timeout</option>

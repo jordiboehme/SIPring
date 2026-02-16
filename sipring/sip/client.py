@@ -23,6 +23,7 @@ logger = logging.getLogger(__name__)
 
 class CallResult(str, Enum):
     """Result of a ring attempt."""
+    COMPLETED = "completed"
     CANCELLED = "cancelled"
     ANSWERED = "answered"
     TIMEOUT = "timeout"
@@ -207,7 +208,7 @@ class SIPClient:
                     return True
                 elif code == 486 or code == 600:
                     logger.info(f"Got {code} - Busy")
-                    self._state.state = "TERMINATED"
+                    self._state.state = "BUSY"
                     return False
                 elif code >= 400:
                     logger.warning(f"Error response: {code}")
@@ -215,7 +216,7 @@ class SIPClient:
                     return False
 
         logger.warning("Timeout waiting for response")
-        self._state.state = "TERMINATED"
+        self._state.state = "TIMEOUT"
         return False
 
     async def _send_cancel(self) -> bool:
@@ -311,6 +312,10 @@ class SIPClient:
                 if self._cancel_requested:
                     await self._send_cancel()
                     return CallResult.CANCELLED
+                if self._state.state == "BUSY":
+                    return CallResult.BUSY
+                if self._state.state == "TIMEOUT":
+                    return CallResult.TIMEOUT
                 return CallResult.ERROR
 
             if self._state.state == "ANSWERED":
@@ -339,7 +344,9 @@ class SIPClient:
 
             notify_state("CANCELING")
             await self._send_cancel()
-            return CallResult.CANCELLED
+            if self._cancel_requested:
+                return CallResult.CANCELLED
+            return CallResult.COMPLETED
 
         except Exception as e:
             logger.exception(f"Ring error: {e}")

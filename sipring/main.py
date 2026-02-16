@@ -39,7 +39,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="SIPring",
     description="SIP phone ringing service for triggering alerts via HTTP",
-    version="0.3.0",
+    version="0.3.1",
     lifespan=lifespan,
 )
 
@@ -154,9 +154,10 @@ async def dashboard(request: Request, _: bool = Depends(optional_auth)):
 
 
 RESULT_BADGE_MAP = {
+    "completed": "badge-success",
     "cancelled": "badge-warning",
-    "answered": "badge-success",
-    "timeout": "badge-info",
+    "answered": "badge-info",
+    "timeout": "badge-warning",
     "error": "badge-error",
     "busy": "badge-warning",
 }
