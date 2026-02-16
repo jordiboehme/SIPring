@@ -1,6 +1,6 @@
 [project]
 name = "sipring"
-version = "0.2.3"
+version = "0.3.0"
 description = "SIP phone ringing service for triggering alerts via HTTP"
 readme = "README.md"
 requires-python = ">=3.10"
