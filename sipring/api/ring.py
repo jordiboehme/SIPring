@@ -7,7 +7,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Query, Request
 
 from ..config import get_settings
-from ..models import RingEvent, RingResponse
+from ..models import RingEvent, RingOverlapBehavior, RingResponse
 from ..ring_manager import get_ring_manager
 from ..storage import get_storage, ConfigNotFoundError
 
@@ -64,11 +64,24 @@ async def trigger_ring(
 
     # Check if already ringing
     if ring_manager.is_active(config.id):
-        return RingResponse(
-            status="already_ringing",
-            config_id=config.id,
-            message=f"Ring already in progress for {config.name}",
-        )
+        behavior = config.overlap_behavior
+        if behavior == RingOverlapBehavior.ignore:
+            return RingResponse(
+                status="already_ringing",
+                config_id=config.id,
+                message=f"Ring already in progress for {config.name}",
+            )
+        elif behavior == RingOverlapBehavior.extend:
+            await ring_manager.extend_ring(config.id, ring_duration)
+            return RingResponse(
+                status="extended",
+                config_id=config.id,
+                message=f"Ring extended for {config.name} (duration={ring_duration}s)",
+            )
+        elif behavior == RingOverlapBehavior.replace:
+            await ring_manager.cancel_ring(config.id)
+            await ring_manager.wait_for_completion(config.id, timeout=ring_duration + 10)
+            # Fall through to start_ring() below
 
     # Build event
     event = RingEvent(

@@ -120,6 +120,7 @@ class SIPClient:
         self._transport: Optional[asyncio.DatagramTransport] = None
         self._state = CallState()
         self._cancel_requested = False
+        self._new_ring_end: Optional[float] = None
 
     @property
     def state(self) -> str:
@@ -282,6 +283,10 @@ class SIPClient:
         """Request cancellation of the current call."""
         self._cancel_requested = True
 
+    def request_extend(self, new_end_time: float) -> None:
+        """Set a new ring end time (event loop absolute time)."""
+        self._new_ring_end = new_end_time
+
     async def ring(
         self,
         duration: float = 30.0,
@@ -298,6 +303,7 @@ class SIPClient:
             CallResult enum value
         """
         self._cancel_requested = False
+        self._new_ring_end = None
         self._state = CallState()
 
         def notify_state(state: str) -> None:
@@ -327,6 +333,10 @@ class SIPClient:
             ring_end = asyncio.get_event_loop().time() + duration
 
             while asyncio.get_event_loop().time() < ring_end:
+                if self._new_ring_end is not None:
+                    if self._new_ring_end > ring_end:
+                        ring_end = self._new_ring_end
+                    self._new_ring_end = None
                 if self._cancel_requested:
                     logger.info("Cancel requested")
                     break

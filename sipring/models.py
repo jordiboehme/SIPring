@@ -3,10 +3,17 @@
 import re
 import unicodedata
 from datetime import datetime, timezone
+from enum import Enum
 from typing import Optional
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, field_validator
+
+
+class RingOverlapBehavior(str, Enum):
+    ignore = "ignore"
+    extend = "extend"
+    replace = "replace"
 
 
 def slugify(text: str) -> str:
@@ -31,6 +38,10 @@ class RingConfigBase(BaseModel):
     caller_name: str = Field(..., min_length=1, max_length=100, description="Caller display name")
     caller_user: str = Field("107", max_length=100, description="Caller SIP user")
     ring_duration: float = Field(30, ge=0.1, le=300, description="Max ring duration in seconds")
+    overlap_behavior: RingOverlapBehavior = Field(
+        RingOverlapBehavior.ignore,
+        description="What to do when triggered while already ringing",
+    )
     local_port: int = Field(5062, ge=1024, le=65535, description="Local UDP port for SIP")
     enabled: bool = Field(True, description="Whether this config is enabled")
 
@@ -67,6 +78,7 @@ class RingConfigUpdate(BaseModel):
     caller_name: Optional[str] = Field(None, min_length=1, max_length=100)
     caller_user: Optional[str] = Field(None, max_length=100)
     ring_duration: Optional[float] = Field(None, ge=0.1, le=300)
+    overlap_behavior: Optional[RingOverlapBehavior] = None
     local_port: Optional[int] = Field(None, ge=1024, le=65535)
     enabled: Optional[bool] = None
 

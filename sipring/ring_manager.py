@@ -124,6 +124,16 @@ class RingManager:
                 self._active_calls.pop(config_id, None)
             logger.info(f"Ring completed for config {config_id}")
 
+    async def extend_ring(self, config_id: UUID, duration: float) -> bool:
+        """Extend an active ring so it ends at now + duration."""
+        async with self._lock:
+            call = self._active_calls.get(config_id)
+            if not call:
+                return False
+            new_end = asyncio.get_event_loop().time() + duration
+            call.client.request_extend(new_end)
+            return True
+
     async def cancel_ring(self, config_id: UUID) -> bool:
         """
         Cancel an active ring call.

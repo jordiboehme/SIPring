@@ -105,6 +105,16 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="overlap_behavior" class="form-label">If Already Ringing</label>
+                        <select id="overlap_behavior" name="overlap_behavior" class="form-control">
+                            <option value="ignore" {% if not config or config.overlap_behavior == 'ignore' %}selected{% endif %}>Ignore</option>
+                            <option value="extend" {% if config and config.overlap_behavior == 'extend' %}selected{% endif %}>Extend</option>
+                            <option value="replace" {% if config and config.overlap_behavior == 'replace' %}selected{% endif %}>Cancel &amp; Re-ring</option>
+                        </select>
+                        <div class="form-hint">Behavior when triggered while already ringing</div>
+                    </div>
+
+                    <div class="form-group">
                         <label for="enabled" class="form-label">Status</label>
                         <select id="enabled" name="enabled" class="form-control">
                             <option value="true" {% if not config or config.enabled %}selected{% endif %}>Enabled</option>

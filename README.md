@@ -13,6 +13,7 @@ A Docker-based SIP phone ringing service for triggering alerts via HTTP requests
 - **Multiple Configurations** - Set up different ring profiles for various scenarios
 - **Event Log** - Track every ring with metadata, filterable by config, time range, and result
 - **Caller ID Support** - Display custom caller names on the phone
+- **Overlap Behavior** - Configure per-config behavior when triggered while already ringing (ignore, extend, or replace)
 - **Cancellation** - Stop ringing before timeout or if answered
 - **Docker Ready** - Easy deployment with Docker Compose
 
@@ -107,9 +108,10 @@ curl -X DELETE http://localhost:8080/api/configs/front-door
 | `sip_port`      | No       | 5060     | SIP server port                                    |
 | `caller_name`   | Yes      | -        | Caller ID display name                             |
 | `caller_user`   | No       | 107      | Caller SIP user (numeric recommended)              |
-| `ring_duration` | No       | 30       | Maximum ring duration in seconds                   |
-| `local_port`    | No       | 5062     | Local UDP port for SIP                             |
-| `enabled`       | No       | true     | Whether this config is active                      |
+| `ring_duration`    | No       | 30       | Maximum ring duration in seconds                              |
+| `overlap_behavior` | No       | ignore   | What to do when triggered while already ringing: `ignore`, `extend`, `replace` |
+| `local_port`       | No       | 5062     | Local UDP port for SIP                                        |
+| `enabled`          | No       | true     | Whether this config is active                                 |
 
 ### Environment Variables
 
