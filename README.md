@@ -193,8 +193,7 @@ sipring/
 ├── docker/
 │   ├── Dockerfile
 │   └── docker-compose.yml
-├── tests/
-└── poc_sip.py           # Standalone SIP test script
+└── tests/
 ```
 
 ## Troubleshooting
@@ -204,7 +203,6 @@ sipring/
 1. Check that the SIP server IP is correct and reachable
 2. Verify the SIP user/extension exists
 3. Check firewall rules allow UDP on the local port (default 5062)
-4. Try the POC script directly: `python poc_sip.py --target-host YOUR_IP --target-user YOUR_EXT`
 
 ### Caller ID not showing
 
