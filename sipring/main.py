@@ -11,6 +11,7 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from . import __version__
 from .config import get_settings
 from .api import ring_router, config_router, events_router
 from .storage import get_storage, get_event_storage
@@ -39,7 +40,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="SIPring",
     description="SIP phone ringing service for triggering alerts via HTTP",
-    version="0.3.2",
+    version=__version__,
     lifespan=lifespan,
 )
 

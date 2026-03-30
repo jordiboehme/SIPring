@@ -169,7 +169,7 @@ def _get_source_user(request: Request) -> Optional[str]:
 
 
 @router.post("/{id_or_slug}/test", response_model=RingResponse)
-async def test_config(id_or_slug: str, request: Request, duration: int = 3):
+async def test_config(id_or_slug: str, request: Request, duration: float = 3):
     """
     Test a ring configuration with a short ring.
 

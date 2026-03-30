@@ -39,7 +39,7 @@ def _get_source_user(request: Request) -> Optional[str]:
 async def trigger_ring(
     id_or_slug: str,
     request: Request,
-    duration: Optional[int] = Query(None, ge=1, le=300, description="Override ring duration"),
+    duration: Optional[float] = Query(None, ge=0.1, le=300, description="Override ring duration"),
     wait: bool = Query(False, description="Wait for ring to complete"),
 ):
     """

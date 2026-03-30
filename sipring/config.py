@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     # SIP defaults
     default_sip_port: int = 5060
     default_local_port: int = 5062
-    default_ring_duration: int = 30
+    default_ring_duration: float = 30
 
     # Event retention
     event_retention_days: int = 90  # 0 = keep forever
