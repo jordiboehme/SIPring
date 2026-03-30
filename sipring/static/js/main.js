@@ -272,7 +272,7 @@
                 sip_port: parseInt(form.sip_port.value),
                 caller_name: form.caller_name.value,
                 caller_user: form.caller_user.value,
-                ring_duration: parseInt(form.ring_duration.value),
+                ring_duration: parseFloat(form.ring_duration.value),
                 overlap_behavior: form.overlap_behavior.value,
                 local_port: parseInt(form.local_port.value),
                 enabled: form.enabled.value === 'true'
