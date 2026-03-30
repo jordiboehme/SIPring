@@ -1,6 +1,6 @@
 [project]
 name = "sipring"
-version = "0.3.3"
+version = "0.3.4"
 description = "SIP phone ringing service for triggering alerts via HTTP"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -9,26 +9,26 @@ authors = [
     {name = "SIPring Contributors"}
 ]
 dependencies = [
-    "fastapi>=0.104.0",
-    "uvicorn[standard]>=0.24.0",
-    "pydantic>=2.5.0",
-    "pydantic-settings>=2.0.0",
-    "jinja2>=3.1.2",
-    "python-multipart>=0.0.6",
+    "fastapi>=0.135.0",
+    "uvicorn[standard]>=0.42.0",
+    "pydantic>=2.12.0",
+    "pydantic-settings>=2.13.0",
+    "jinja2>=3.1.6",
+    "python-multipart>=0.0.22",
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=7.0.0",
-    "pytest-asyncio>=0.21.0",
-    "httpx>=0.25.0",
+    "pytest>=9.0.0",
+    "pytest-asyncio>=1.3.0",
+    "httpx>=0.28.0",
 ]
 
 [project.scripts]
 sipring = "sipring.main:app"
 
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=75.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
