@@ -20,7 +20,7 @@ class ActiveCall:
     config_id: UUID
     client: SIPClient
     task: asyncio.Task
-    started_at: datetime = field(default_factory=datetime.utcnow)
+    started_at: datetime = field(default_factory=utc_now)
     state: str = "starting"
 
 

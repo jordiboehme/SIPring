@@ -206,3 +206,11 @@ async def test_answered_during_cancel_sends_ack_and_bye(fake_server):
     assert result == CallResult.ANSWERED
     assert len(fake_server.requests("ACK")) == 1
     assert len(fake_server.requests("BYE")) == 1
+
+
+def test_active_call_started_at_is_timezone_aware():
+    from sipring.ring_manager import ActiveCall
+    from uuid import uuid4
+
+    call = ActiveCall(config_id=uuid4(), client=None, task=None)
+    assert call.started_at.tzinfo is not None
