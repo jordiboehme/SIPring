@@ -136,3 +136,50 @@ async def test_no_retransmission_after_provisional_response(fake_server):
 
     assert result in (CallResult.CANCELLED, CallResult.TIMEOUT)
     assert len(fake_server.requests("INVITE")) == 1
+
+
+def _branch_of(message: str) -> str:
+    import re
+    return re.search(r"branch=(\S+)", message).group(1)
+
+
+async def test_busy_response_is_acked(fake_server):
+    """486 Busy must be ACKed with the INVITE's branch."""
+
+    def handler(msg):
+        if msg.startswith("INVITE "):
+            return [sip_response(msg, 486, "Busy Here",
+                                 to_tag="gig1", cseq="1 INVITE")]
+        return []
+
+    fake_server.handler = handler
+    client = make_client(fake_server.port)
+    result = await client.ring(duration=0.2)
+
+    assert result == CallResult.BUSY
+    acks = fake_server.requests("ACK")
+    assert len(acks) == 1
+    assert _branch_of(acks[0]) == _branch_of(fake_server.requests("INVITE")[0])
+    assert "CSeq: 1 ACK" in acks[0]
+
+
+async def test_487_after_cancel_is_acked(fake_server):
+    """The 487 that terminates a cancelled INVITE must be ACKed."""
+
+    def handler(msg):
+        if msg.startswith("INVITE "):
+            return [sip_response(msg, 180, "Ringing")]
+        if msg.startswith("CANCEL "):
+            return [
+                sip_response(msg, 200, "OK"),
+                sip_response(msg, 487, "Request Terminated",
+                             to_tag="gig1", cseq="1 INVITE"),
+            ]
+        return []
+
+    fake_server.handler = handler
+    client = make_client(fake_server.port)
+    result = await client.ring(duration=0.2)
+
+    assert result == CallResult.COMPLETED
+    assert len(fake_server.requests("ACK")) == 1

@@ -15,6 +15,7 @@ from .messages import (
     generate_branch,
     generate_tag,
     parse_call_id,
+    parse_cseq_method,
     parse_response_code,
     parse_to_tag,
 )
@@ -164,6 +165,14 @@ class SIPClient:
             method = message.split()[0]
             logger.debug(f"Sent {method} to {self.target_host}:{self.target_port}")
 
+    def _ack_error_response(self, response: str) -> None:
+        """ACK a non-2xx final response so the peer stops retransmitting it."""
+        if not self._msg_builder:
+            logger.warning("Cannot ACK error response: message builder not initialized")
+            return
+        to_tag = parse_to_tag(response) or ""
+        self._send(self._msg_builder.build_ack_for_error(self._state, to_tag))
+
     async def _receive(self, timeout: float = 5.0) -> Optional[str]:
         """Receive a SIP response for the current call.
 
@@ -240,10 +249,14 @@ class SIPClient:
                     self._state.state = "ANSWERED"
                     return True
                 elif code == 486 or code == 600:
+                    self._ack_error_response(response)
+                    await asyncio.sleep(0.01)  # Wait for ACK to be delivered
                     logger.info(f"Got {code} - Busy")
                     self._state.state = "BUSY"
                     return False
                 elif code >= 400:
+                    self._ack_error_response(response)
+                    await asyncio.sleep(0.01)  # Wait for ACK to be delivered
                     logger.warning(f"Error response: {code}")
                     self._state.state = "TERMINATED"
                     return False
@@ -274,6 +287,8 @@ class SIPClient:
                     logger.debug("Got 200 OK for CANCEL")
                     got_200 = True
                 elif code == 487:
+                    self._ack_error_response(response)
+                    await asyncio.sleep(0.01)  # Wait for ACK to be delivered
                     logger.debug("Got 487 Request Terminated")
                     got_487 = True
 

@@ -158,3 +158,26 @@ def test_parse_call_id():
     )
     assert parse_call_id(response) == "sipring-abc12345"
     assert parse_call_id("SIP/2.0 180 Ringing\r\n\r\n") is None
+
+
+def test_build_ack_for_error_uses_invite_branch():
+    """Non-2xx ACK must reuse the INVITE branch and CSeq number (RFC 3261)."""
+    msg = SIPMessage(
+        target_user="1234", target_host="10.0.0.1", target_port=5060,
+        caller_name="Test", caller_user="caller",
+        local_host="10.0.0.2", local_port=5062,
+    )
+    state = CallState(call_id="test-1", from_tag="ft1",
+                      branch="z9hG4bKinvite1", cseq=1)
+    ack = msg.build_ack_for_error(state, to_tag="remote1")
+    assert "ACK sip:1234@10.0.0.1 SIP/2.0" in ack
+    assert "branch=z9hG4bKinvite1" in ack
+    assert "CSeq: 1 ACK" in ack
+    assert "To: <sip:1234@10.0.0.1>;tag=remote1" in ack
+
+
+def test_parse_cseq_method():
+    from sipring.sip.messages import parse_cseq_method
+    response = "SIP/2.0 200 OK\r\nCSeq: 1 CANCEL\r\n\r\n"
+    assert parse_cseq_method(response) == "CANCEL"
+    assert parse_cseq_method("SIP/2.0 200 OK\r\n\r\n") is None

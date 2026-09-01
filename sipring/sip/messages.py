@@ -123,6 +123,26 @@ class SIPMessage:
             f"\r\n"
         )
 
+    def build_ack_for_error(self, state: CallState, to_tag: str = "") -> str:
+        """Build ACK for a non-2xx final response.
+
+        RFC 3261 17.1.1.3: this ACK belongs to the INVITE transaction, so it
+        reuses the INVITE's branch and CSeq number; the To tag comes from the
+        error response.
+        """
+        to_suffix = f";tag={to_tag}" if to_tag else ""
+        return (
+            f"ACK sip:{self.target_user}@{self.target_host} SIP/2.0\r\n"
+            f"Via: SIP/2.0/UDP {self.local_host}:{self.local_port};branch={state.branch}\r\n"
+            f"Max-Forwards: 70\r\n"
+            f"From: \"{self.caller_name}\" <sip:{self.caller_user}@{self.local_host}>;tag={state.from_tag}\r\n"
+            f"To: <sip:{self.target_user}@{self.target_host}>{to_suffix}\r\n"
+            f"Call-ID: {state.call_id}\r\n"
+            f"CSeq: {state.cseq} ACK\r\n"
+            f"Content-Length: 0\r\n"
+            f"\r\n"
+        )
+
 
 def parse_response_code(response: str) -> int:
     """Extract response code from SIP response."""
@@ -140,3 +160,9 @@ def parse_call_id(response: str) -> Optional[str]:
     """Extract Call-ID from a SIP message."""
     match = re.search(r"^Call-ID:\s*(\S+)", response, re.IGNORECASE | re.MULTILINE)
     return match.group(1) if match else None
+
+
+def parse_cseq_method(response: str) -> Optional[str]:
+    """Extract the method from a CSeq header (uppercase), or None."""
+    match = re.search(r"^CSeq:\s*\d+\s+(\w+)", response, re.IGNORECASE | re.MULTILINE)
+    return match.group(1).upper() if match else None
