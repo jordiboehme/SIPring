@@ -134,3 +134,9 @@ def parse_to_tag(response: str) -> Optional[str]:
     """Extract To-tag from SIP response."""
     match = re.search(r"To:.*?;tag=([^\s;>]+)", response, re.IGNORECASE)
     return match.group(1) if match else None
+
+
+def parse_call_id(response: str) -> Optional[str]:
+    """Extract Call-ID from a SIP message."""
+    match = re.search(r"^Call-ID:\s*(\S+)", response, re.IGNORECASE | re.MULTILINE)
+    return match.group(1) if match else None

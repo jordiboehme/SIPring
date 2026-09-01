@@ -55,3 +55,29 @@ async def test_ring_rings_and_cancels_cleanly(fake_server):
 
     assert result == CallResult.COMPLETED
     assert len(fake_server.requests("CANCEL")) >= 1
+
+
+async def test_foreign_call_id_responses_are_ignored(fake_server):
+    """A stale 486 for another Call-ID must not kill the current call."""
+
+    def handler(msg):
+        if msg.startswith("INVITE "):
+            return [
+                sip_response(msg, 486, "Busy Here", to_tag="old",
+                             cseq="1 INVITE", call_id="sipring-stale123"),
+                sip_response(msg, 180, "Ringing"),
+            ]
+        if msg.startswith("CANCEL "):
+            return [
+                sip_response(msg, 200, "OK"),
+                sip_response(msg, 487, "Request Terminated",
+                             to_tag="gig1", cseq="1 INVITE"),
+            ]
+        return []
+
+    fake_server.handler = handler
+    client = make_client(fake_server.port)
+    result = await client.ring(duration=0.3)
+
+    # Without filtering, the stale 486 would produce BUSY.
+    assert result == CallResult.COMPLETED

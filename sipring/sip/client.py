@@ -14,6 +14,7 @@ from .messages import (
     generate_call_id,
     generate_branch,
     generate_tag,
+    parse_call_id,
     parse_response_code,
     parse_to_tag,
 )
@@ -164,19 +165,33 @@ class SIPClient:
             logger.debug(f"Sent {method} to {self.target_host}:{self.target_port}")
 
     async def _receive(self, timeout: float = 5.0) -> Optional[str]:
-        """Receive SIP response."""
+        """Receive a SIP response for the current call.
+
+        Responses carrying a different Call-ID (stale retransmissions from a
+        previous dialog, or unrelated traffic on the port) are dropped.
+        """
         if not self._protocol:
             return None
-        try:
-            response = await asyncio.wait_for(
-                self._protocol.response_queue.get(),
-                timeout=timeout,
-            )
+        loop = asyncio.get_event_loop()
+        deadline = loop.time() + timeout
+        while True:
+            remaining = deadline - loop.time()
+            if remaining <= 0:
+                return None
+            try:
+                response = await asyncio.wait_for(
+                    self._protocol.response_queue.get(),
+                    timeout=remaining,
+                )
+            except asyncio.TimeoutError:
+                return None
+            call_id = parse_call_id(response)
+            if call_id is not None and self._state.call_id and call_id != self._state.call_id:
+                logger.debug(f"Ignoring response for foreign Call-ID {call_id}")
+                continue
             code = parse_response_code(response)
             logger.debug(f"Received {code}")
             return response
-        except asyncio.TimeoutError:
-            return None
 
     async def _send_invite(self) -> bool:
         """Send INVITE and wait for provisional response."""

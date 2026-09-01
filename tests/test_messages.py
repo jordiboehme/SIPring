@@ -145,3 +145,16 @@ To: <sip:1234@10.0.0.1>"""
 
     tag = parse_to_tag(response)
     assert tag is None
+
+
+def test_parse_call_id():
+    """Test Call-ID extraction from a response."""
+    from sipring.sip.messages import parse_call_id
+    response = (
+        "SIP/2.0 180 Ringing\r\n"
+        "Via: SIP/2.0/UDP 10.0.0.2:5062;branch=z9hG4bKtest\r\n"
+        "Call-ID: sipring-abc12345\r\n"
+        "CSeq: 1 INVITE\r\n\r\n"
+    )
+    assert parse_call_id(response) == "sipring-abc12345"
+    assert parse_call_id("SIP/2.0 180 Ringing\r\n\r\n") is None
