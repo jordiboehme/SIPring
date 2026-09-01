@@ -1,20 +1,24 @@
-FROM python:3.13-slim
+# Build stage: compiles dependencies that need a toolchain on armv7 (httptools, uvloop)
+FROM python:3.13-slim AS builder
 
-WORKDIR /app
-
-# Install build dependencies for armv7 (needed to compile httptools, uvloop)
-# These are removed after pip install to keep the image small
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     libc-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies (paths relative to repo root)
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Remove build dependencies to reduce image size
-RUN apt-get purge -y --auto-remove gcc libc-dev
+# Final stage: runtime only, no compiler toolchain
+FROM python:3.13-slim
+
+WORKDIR /app
+
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy application code
 COPY sipring/ sipring/
