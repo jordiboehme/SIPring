@@ -4,26 +4,27 @@
 
 {% block content %}
 <!-- Page Header -->
-<div class="page-header">
+<div class="page-header" data-config-card data-config-id="{{ config.id }}">
     <div>
         <h1 class="page-title">{{ config.name }}</h1>
         <div class="flex items-center gap-3 mt-2">
-            {% if is_ringing %}
-            <span class="badge badge-info">
+            <span class="badge badge-info" data-ring-badge {% if not is_ringing %}hidden{% endif %}>
                 <span class="status-dot status-dot-info pulse"></span>
                 Ringing ({{ ring_state }})
             </span>
-            {% elif config.enabled %}
-            <span class="badge badge-success">
-                <span class="status-dot status-dot-success"></span>
-                Enabled
+            <span data-idle-badge {% if is_ringing %}hidden{% endif %}>
+                {% if config.enabled %}
+                <span class="badge badge-success">
+                    <span class="status-dot status-dot-success"></span>
+                    Enabled
+                </span>
+                {% else %}
+                <span class="badge badge-warning">
+                    <span class="status-dot status-dot-warning"></span>
+                    Disabled
+                </span>
+                {% endif %}
             </span>
-            {% else %}
-            <span class="badge badge-warning">
-                <span class="status-dot status-dot-warning"></span>
-                Disabled
-            </span>
-            {% endif %}
         </div>
     </div>
     <div class="page-actions">
@@ -31,12 +32,11 @@
             <svg><use href="#icon-bell"></use></svg>
             Ring Now
         </button>
-        {% if is_ringing %}
-        <button class="btn btn-secondary" data-action="cancel" data-url="{{ cancel_url }}">
+        <button class="btn btn-secondary" data-action="cancel" data-url="{{ cancel_url }}"
+                {% if not is_ringing %}hidden{% endif %}>
             <svg><use href="#icon-stop"></use></svg>
             Cancel
         </button>
-        {% endif %}
     </div>
 </div>
 

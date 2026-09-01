@@ -155,6 +155,7 @@
             }
             button.innerHTML = `<svg><use href="#icon-check"></use></svg> ${data.status || 'Done'}`;
             showToast(data.message || data.status || 'Ring triggered');
+            refreshActiveRings();
         } catch (error) {
             button.innerHTML = '<svg><use href="#icon-alert"></use></svg> Error';
             showToast(error.message || 'Failed to trigger ring', 'error');
@@ -274,6 +275,43 @@
                 break;
         }
     });
+
+    // ==========================================================================
+    // Live Ring Status Polling
+    // ==========================================================================
+
+    const POLL_INTERVAL_MS = 2500;
+
+    function updateRingIndicators(active) {
+        document.querySelectorAll('[data-config-card]').forEach(card => {
+            const ringing = Object.prototype.hasOwnProperty.call(active, card.dataset.configId);
+            const ringBadge = card.querySelector('[data-ring-badge]');
+            const idleBadge = card.querySelector('[data-idle-badge]');
+            const cancelBtn = card.querySelector('[data-action="cancel"]');
+            if (ringBadge) ringBadge.hidden = !ringing;
+            if (idleBadge) idleBadge.hidden = ringing;
+            if (cancelBtn) cancelBtn.hidden = !ringing;
+        });
+        const counter = document.querySelector('[data-active-count]');
+        if (counter) counter.textContent = Object.keys(active).length;
+    }
+
+    async function refreshActiveRings() {
+        try {
+            const response = await fetch('/api/active-rings');
+            if (!response.ok) return;
+            const data = await response.json();
+            updateRingIndicators(data.active || {});
+        } catch (error) {
+            // Server unreachable; leave the UI as-is and retry on the next tick.
+        }
+    }
+
+    if (document.querySelector('[data-config-card]')) {
+        setInterval(() => {
+            if (!document.hidden) refreshActiveRings();
+        }, POLL_INTERVAL_MS);
+    }
 
     // ==========================================================================
     // Form Handling

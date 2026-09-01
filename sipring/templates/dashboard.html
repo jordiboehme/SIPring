@@ -26,7 +26,7 @@
     <div class="stat-card">
         <div class="stat-label">Active Rings</div>
         <div class="stat-value has-pulse">
-            {{ active_count }}
+            <span data-active-count>{{ active_count }}</span>
             {% if active_count > 0 %}
             <span class="status-dot status-dot-success pulse"></span>
             {% endif %}
@@ -47,31 +47,38 @@
 <!-- Config Cards Grid -->
 <div class="card-grid">
     {% for item in configs %}
-    <div class="card">
+    <div class="card" data-config-card data-config-id="{{ item.config.id }}">
         <div class="card-header">
             <div class="card-header-left">
                 <span class="card-title">{{ item.config.name }}</span>
-                {% if item.is_ringing %}
-                <span class="badge badge-info">
+                <span class="badge badge-info" data-ring-badge {% if not item.is_ringing %}hidden{% endif %}>
                     <span class="status-dot status-dot-info pulse"></span>
                     Ringing
                 </span>
-                {% elif item.config.enabled %}
-                <span class="badge badge-success">
-                    <span class="status-dot status-dot-success"></span>
-                    Enabled
+                <span data-idle-badge {% if item.is_ringing %}hidden{% endif %}>
+                    {% if item.config.enabled %}
+                    <span class="badge badge-success">
+                        <span class="status-dot status-dot-success"></span>
+                        Enabled
+                    </span>
+                    {% else %}
+                    <span class="badge badge-warning">
+                        <span class="status-dot status-dot-warning"></span>
+                        Disabled
+                    </span>
+                    {% endif %}
                 </span>
-                {% else %}
-                <span class="badge badge-warning">
-                    <span class="status-dot status-dot-warning"></span>
-                    Disabled
-                </span>
-                {% endif %}
             </div>
             <div class="card-actions">
                 <button class="btn btn-primary btn-sm" data-action="ring" data-url="{{ item.ring_url }}">
                     <svg><use href="#icon-bell"></use></svg>
                     Ring
+                </button>
+                <button class="btn btn-secondary btn-sm" data-action="cancel"
+                        data-url="{{ item.cancel_url }}"
+                        {% if not item.is_ringing %}hidden{% endif %}>
+                    <svg><use href="#icon-stop"></use></svg>
+                    Cancel
                 </button>
                 <button class="btn btn-secondary btn-sm" data-action="test" data-config-id="{{ item.config.id }}">
                     <svg><use href="#icon-test"></use></svg>

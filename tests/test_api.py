@@ -200,3 +200,14 @@ def test_active_rings_reports_states(client):
         assert response.json()["active"] == {str(config_id): "RINGING"}
     finally:
         manager._active_calls.pop(config_id, None)
+
+
+def test_dashboard_renders_config_cards(client):
+    client.post("/api/configs", json={
+        "name": "Poll Test", "sip_user": "**610",
+        "sip_server": "192.168.1.100", "caller_name": "Bell",
+    })
+    response = client.get("/")
+    assert response.status_code == 200
+    assert 'data-config-card' in response.text
+    assert 'data-ring-badge' in response.text
