@@ -29,7 +29,7 @@ SIPring is a Docker-based SIP phone ringing service for triggering alerts (doorb
                  (answered) → ANSWERED → (send BYE) → TERMINATED
    ```
 
-5. **Caller ID Display**: The `P-Asserted-Identity` and `Remote-Party-ID` headers are used to display caller name on the phone. The INVITE is a single RFC-compliant header block (see `sipring/sip/messages.py`); the original hardware capture file `invite_haustuer_clean.sip` no longer exists in the repo.
+5. **Caller ID Display**: Caller name and number (CLIP) come from the `From` header alone: display name = `caller_name`, user part = `caller_user` (e.g. `#107#1`), which the Gigaset matches against its phonebook for names and ringtones. Do NOT add `P-Asserted-Identity` or `Remote-Party-ID` headers: the N670 prefers them over `From`, cannot extract a number from their URI, and shows an empty CLIP (verified on hardware 2026-09-01). The INVITE is a single RFC-compliant header block (see `sipring/sip/messages.py`); the original hardware capture file `invite_haustuer_clean.sip` no longer exists in the repo.
 
 6. **Client-side robustness** (implemented 2026-09-01):
    - INVITE is retransmitted with a doubling interval until the first response (RFC 3261 Timer A style)
@@ -116,7 +116,7 @@ python poc_sip.py --wait-answer
 
 ## Learnings
 
-1. **SIP Message Format**: The INVITE was originally built with blank lines mid-headers to mirror a hardware capture; since 2026-09-01 it is a single RFC-compliant header block (pending hardware verification against the Gigaset N670).
+1. **SIP Message Format**: The INVITE was originally built with blank lines mid-headers to mirror a hardware capture; since 2026-09-01 it is a single RFC-compliant header block. Hardware verification on the N670 showed the old blank lines had been load-bearing by accident: they hid `P-Asserted-Identity`/`Remote-Party-ID` from the phone's parser. Once exposed as real headers, the phone preferred PAI over `From` and displayed an empty CLIP, breaking phonebook matching - so those headers were removed entirely (v0.3.10).
 
 2. **Timezone-aware Datetimes**: Python 3.12+ deprecates `datetime.utcnow()`. Use `datetime.now(timezone.utc)` instead.
 

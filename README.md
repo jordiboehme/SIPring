@@ -208,7 +208,7 @@ sipring/
 
 ### Caller ID not showing
 
-Some phones require specific headers. The default configuration includes `P-Asserted-Identity` and `Remote-Party-ID` headers which work with most phones.
+The caller name and number are carried in the SIP From header (display name and user part). Set "Caller SIP User" to the number your phone's local phonebook expects (e.g. #107#1) so name and ringtone assignments match. SIPring deliberately sends no P-Asserted-Identity or Remote-Party-ID headers: Gigaset bases prefer those over the From header and fail to display a caller number from them.
 
 ### Docker networking issues
 

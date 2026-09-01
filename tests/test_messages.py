@@ -196,7 +196,24 @@ def test_build_invite_has_single_header_block():
 
     headers, _, body = invite.partition("\r\n\r\n")
     assert body == "", "INVITE must have an empty body"
-    assert "P-Asserted-Identity:" in headers
-    assert "Remote-Party-ID:" in headers
     assert "User-Agent:" in headers
     assert "Content-Length: 0" in headers
+
+
+def test_build_invite_has_no_identity_headers():
+    """P-Asserted-Identity/Remote-Party-ID must be absent: the Gigaset prefers
+    them over From for CLIP and fails to extract a number from their dummy URI,
+    which breaks phonebook matching (observed on the N670, 2026-09-01)."""
+    msg = SIPMessage(
+        target_user="1234", target_host="10.0.0.1", target_port=5060,
+        caller_name="Test", caller_user="#107#1",
+        local_host="10.0.0.2", local_port=5062,
+    )
+    state = CallState(call_id="test-1", from_tag="ft1",
+                      branch="z9hG4bKb1", cseq=1)
+    invite = msg.build_invite(state)
+
+    assert "P-Asserted-Identity" not in invite
+    assert "Remote-Party-ID" not in invite
+    # CLIP comes from the From user part, so it must carry caller_user verbatim
+    assert 'From: "Test" <sip:#107#1@10.0.0.2>;tag=ft1' in invite
