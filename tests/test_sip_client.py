@@ -183,3 +183,26 @@ async def test_487_after_cancel_is_acked(fake_server):
 
     assert result == CallResult.COMPLETED
     assert await wait_until(lambda: len(fake_server.requests("ACK")) == 1)
+
+
+async def test_answered_during_cancel_sends_ack_and_bye(fake_server):
+    """A 200 OK to INVITE arriving after CANCEL must be ACKed and BYEd."""
+
+    def handler(msg):
+        if msg.startswith("INVITE "):
+            return [sip_response(msg, 180, "Ringing")]
+        if msg.startswith("CANCEL "):
+            # Phone was picked up just before the CANCEL landed: the INVITE
+            # transaction completes with 200 OK instead of 487.
+            return [sip_response(msg, 200, "OK", to_tag="gig1", cseq="1 INVITE")]
+        if msg.startswith("BYE "):
+            return [sip_response(msg, 200, "OK")]
+        return []
+
+    fake_server.handler = handler
+    client = make_client(fake_server.port)
+    result = await client.ring(duration=0.2)
+
+    assert result == CallResult.ANSWERED
+    assert len(fake_server.requests("ACK")) == 1
+    assert len(fake_server.requests("BYE")) == 1

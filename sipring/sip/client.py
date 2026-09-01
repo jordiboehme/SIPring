@@ -276,15 +276,23 @@ class SIPClient:
 
         while asyncio.get_event_loop().time() < deadline and not (got_200 and got_487):
             response = await self._receive(timeout=1.0)
-            if response:
-                code = parse_response_code(response)
-                if code == 200 and "CANCEL" in response:
-                    logger.debug("Got 200 OK for CANCEL")
-                    got_200 = True
-                elif code == 487:
-                    self._ack_error_response(response)
-                    logger.debug("Got 487 Request Terminated")
-                    got_487 = True
+            if not response:
+                continue
+            code = parse_response_code(response)
+            method = parse_cseq_method(response)
+            if code == 200 and method == "CANCEL":
+                logger.debug("Got 200 OK for CANCEL")
+                got_200 = True
+            elif code == 200 and method == "INVITE":
+                # The phone was answered before the CANCEL took effect.
+                logger.info("Call answered while cancelling")
+                self._state.to_tag = parse_to_tag(response) or ""
+                self._state.state = "ANSWERED"
+                return False
+            elif code == 487:
+                self._ack_error_response(response)
+                logger.debug("Got 487 Request Terminated")
+                got_487 = True
 
         self._state.state = "TERMINATED"
         return got_200
@@ -358,6 +366,10 @@ class SIPClient:
             if not await self._send_invite():
                 if self._cancel_requested:
                     await self._send_cancel()
+                    if self._state.state == "ANSWERED":
+                        notify_state("ANSWERED")
+                        await self._send_bye()
+                        return CallResult.ANSWERED
                     return CallResult.CANCELLED
                 if self._state.state == "BUSY":
                     return CallResult.BUSY
@@ -395,6 +407,10 @@ class SIPClient:
 
             notify_state("CANCELING")
             await self._send_cancel()
+            if self._state.state == "ANSWERED":
+                notify_state("ANSWERED")
+                await self._send_bye()
+                return CallResult.ANSWERED
             if self._cancel_requested:
                 return CallResult.CANCELLED
             return CallResult.COMPLETED
