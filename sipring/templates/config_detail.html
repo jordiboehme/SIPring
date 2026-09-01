@@ -27,12 +27,12 @@
         </div>
     </div>
     <div class="page-actions">
-        <button class="btn btn-primary" onclick="triggerRing('{{ ring_url }}', this)">
+        <button class="btn btn-primary" data-action="ring" data-url="{{ ring_url }}">
             <svg><use href="#icon-bell"></use></svg>
             Ring Now
         </button>
         {% if is_ringing %}
-        <button class="btn btn-secondary" onclick="triggerRing('{{ cancel_url }}', this)">
+        <button class="btn btn-secondary" data-action="cancel" data-url="{{ cancel_url }}">
             <svg><use href="#icon-stop"></use></svg>
             Cancel
         </button>
@@ -73,7 +73,7 @@
                 <div class="url-label">Ring URL</div>
                 <div class="code-box">
                     <code>{{ ring_url }}</code>
-                    <button class="btn-copy" onclick="copyToClipboard('{{ ring_url }}', this)" title="Copy URL">
+                    <button class="btn-copy" data-action="copy" data-copy-text="{{ ring_url }}" title="Copy URL">
                         <svg><use href="#icon-copy"></use></svg>
                     </button>
                 </div>
@@ -83,7 +83,7 @@
                 <div class="url-label">Cancel URL</div>
                 <div class="code-box">
                     <code>{{ cancel_url }}</code>
-                    <button class="btn-copy" onclick="copyToClipboard('{{ cancel_url }}', this)" title="Copy URL">
+                    <button class="btn-copy" data-action="copy" data-copy-text="{{ cancel_url }}" title="Copy URL">
                         <svg><use href="#icon-copy"></use></svg>
                     </button>
                 </div>
@@ -135,7 +135,7 @@
 <!-- Action Bar -->
 <div class="action-bar">
     <div class="action-bar-left">
-        <button class="btn btn-success" onclick="testRing('{{ config.id }}', this)">
+        <button class="btn btn-success" data-action="test" data-config-id="{{ config.id }}">
             <svg><use href="#icon-test"></use></svg>
             Test (3s)
         </button>
@@ -143,11 +143,11 @@
             <svg><use href="#icon-edit"></use></svg>
             Edit
         </a>
-        <button class="btn btn-secondary" onclick="cloneConfig('{{ config.id }}')">
+        <button class="btn btn-secondary" data-action="clone" data-config-id="{{ config.id }}">
             <svg><use href="#icon-clone"></use></svg>
             Clone
         </button>
-        <button class="btn btn-danger" onclick="deleteConfig('{{ config.id }}', '{{ config.name }}')">
+        <button class="btn btn-danger" data-action="delete" data-config-id="{{ config.id }}" data-config-name="{{ config.name }}">
             <svg><use href="#icon-trash"></use></svg>
             Delete
         </button>

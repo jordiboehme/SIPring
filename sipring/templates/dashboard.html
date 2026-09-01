@@ -69,11 +69,11 @@
                 {% endif %}
             </div>
             <div class="card-actions">
-                <button class="btn btn-primary btn-sm" onclick="triggerRing('{{ item.ring_url }}', this)">
+                <button class="btn btn-primary btn-sm" data-action="ring" data-url="{{ item.ring_url }}">
                     <svg><use href="#icon-bell"></use></svg>
                     Ring
                 </button>
-                <button class="btn btn-secondary btn-sm" onclick="testRing('{{ item.config.id }}', this)">
+                <button class="btn btn-secondary btn-sm" data-action="test" data-config-id="{{ item.config.id }}">
                     <svg><use href="#icon-test"></use></svg>
                     Test
                 </button>
@@ -100,7 +100,7 @@
                 <div class="url-label">Ring URL</div>
                 <div class="code-box">
                     <code>{{ item.ring_url }}</code>
-                    <button class="btn-copy" onclick="copyToClipboard('{{ item.ring_url }}', this)" title="Copy URL">
+                    <button class="btn-copy" data-action="copy" data-copy-text="{{ item.ring_url }}" title="Copy URL">
                         <svg><use href="#icon-copy"></use></svg>
                     </button>
                 </div>
@@ -125,11 +125,11 @@
                 <svg><use href="#icon-edit"></use></svg>
                 Edit
             </a>
-            <button class="btn btn-ghost btn-sm" onclick="cloneConfig('{{ item.config.id }}')">
+            <button class="btn btn-ghost btn-sm" data-action="clone" data-config-id="{{ item.config.id }}">
                 <svg><use href="#icon-clone"></use></svg>
                 Clone
             </button>
-            <button class="btn btn-ghost btn-sm text-error" onclick="deleteConfig('{{ item.config.id }}', '{{ item.config.name }}')">
+            <button class="btn btn-ghost btn-sm text-error" data-action="delete" data-config-id="{{ item.config.id }}" data-config-name="{{ item.config.name }}">
                 <svg><use href="#icon-trash"></use></svg>
                 Delete
             </button>

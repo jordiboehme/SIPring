@@ -248,6 +248,34 @@
     window.deleteConfig = deleteConfig;
 
     // ==========================================================================
+    // Action Button Delegation
+    // ==========================================================================
+
+    document.addEventListener('click', (e) => {
+        const el = e.target.closest('[data-action]');
+        if (!el) return;
+        const d = el.dataset;
+        switch (d.action) {
+            case 'ring':
+            case 'cancel':
+                triggerRing(d.url, el);
+                break;
+            case 'test':
+                testRing(d.configId, el);
+                break;
+            case 'clone':
+                cloneConfig(d.configId);
+                break;
+            case 'delete':
+                deleteConfig(d.configId, d.configName);
+                break;
+            case 'copy':
+                copyToClipboard(d.copyText, el);
+                break;
+        }
+    });
+
+    // ==========================================================================
     // Form Handling
     // ==========================================================================
 
