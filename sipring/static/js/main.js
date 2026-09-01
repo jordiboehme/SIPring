@@ -68,11 +68,17 @@
     function showToast(message, type = 'success', duration = 3000) {
         const toast = document.createElement('div');
         toast.className = `toast toast-${type}`;
-        toast.innerHTML = `
-            <svg><use href="#icon-${type === 'success' ? 'check' : 'alert'}"></use></svg>
-            <span class="toast-message">${message}</span>
-        `;
 
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+        use.setAttribute('href', `#icon-${type === 'success' ? 'check' : 'alert'}`);
+        svg.appendChild(use);
+
+        const span = document.createElement('span');
+        span.className = 'toast-message';
+        span.textContent = message;
+
+        toast.append(svg, span);
         toastContainer.appendChild(toast);
 
         setTimeout(() => {
@@ -136,31 +142,28 @@
     // Ring Actions
     // ==========================================================================
 
-    function triggerRing(url, button) {
+    async function triggerRing(url, button) {
         const originalHtml = button.innerHTML;
         button.innerHTML = '<svg class="spin"><use href="#icon-bell"></use></svg> Ringing...';
         button.disabled = true;
 
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                button.innerHTML = `<svg><use href="#icon-check"></use></svg> ${data.status || 'Done'}`;
-                showToast(data.status || 'Ring triggered');
-
-                setTimeout(() => {
-                    button.innerHTML = originalHtml;
-                    button.disabled = false;
-                }, 3000);
-            })
-            .catch(error => {
-                button.innerHTML = '<svg><use href="#icon-alert"></use></svg> Error';
-                showToast('Failed to trigger ring', 'error');
-
-                setTimeout(() => {
-                    button.innerHTML = originalHtml;
-                    button.disabled = false;
-                }, 3000);
-            });
+        try {
+            const response = await fetch(url);
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.detail || `Request failed (${response.status})`);
+            }
+            button.innerHTML = `<svg><use href="#icon-check"></use></svg> ${data.status || 'Done'}`;
+            showToast(data.message || data.status || 'Ring triggered');
+        } catch (error) {
+            button.innerHTML = '<svg><use href="#icon-alert"></use></svg> Error';
+            showToast(error.message || 'Failed to trigger ring', 'error');
+        } finally {
+            setTimeout(() => {
+                button.innerHTML = originalHtml;
+                button.disabled = false;
+            }, 3000);
+        }
     }
 
     window.triggerRing = triggerRing;
@@ -169,31 +172,28 @@
     // Test Ring
     // ==========================================================================
 
-    function testRing(configId, button) {
+    async function testRing(configId, button) {
         const originalHtml = button.innerHTML;
         button.innerHTML = '<svg class="spin"><use href="#icon-test"></use></svg> Testing...';
         button.disabled = true;
 
-        fetch(`/api/configs/${configId}/test`, { method: 'POST' })
-            .then(response => response.json())
-            .then(data => {
-                button.innerHTML = `<svg><use href="#icon-check"></use></svg> ${data.result || 'Done'}`;
-                showToast(data.result || 'Test completed');
-
-                setTimeout(() => {
-                    button.innerHTML = originalHtml;
-                    button.disabled = false;
-                }, 3000);
-            })
-            .catch(error => {
-                button.innerHTML = '<svg><use href="#icon-alert"></use></svg> Error';
-                showToast('Test failed', 'error');
-
-                setTimeout(() => {
-                    button.innerHTML = originalHtml;
-                    button.disabled = false;
-                }, 3000);
-            });
+        try {
+            const response = await fetch(`/api/configs/${configId}/test`, { method: 'POST' });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.detail || `Request failed (${response.status})`);
+            }
+            button.innerHTML = `<svg><use href="#icon-check"></use></svg> ${data.result || 'Done'}`;
+            showToast(data.result ? `Test result: ${data.result}` : 'Test completed');
+        } catch (error) {
+            button.innerHTML = '<svg><use href="#icon-alert"></use></svg> Error';
+            showToast(error.message || 'Test failed', 'error');
+        } finally {
+            setTimeout(() => {
+                button.innerHTML = originalHtml;
+                button.disabled = false;
+            }, 3000);
+        }
     }
 
     window.testRing = testRing;
@@ -352,10 +352,6 @@
             window.location.href = '/';
         }
     });
-
-    // ==========================================================================
-    // Active Nav Item
-    // ==========================================================================
 
     // ==========================================================================
     // Local Timezone Conversion
