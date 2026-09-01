@@ -3,16 +3,27 @@
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from ..models import RingEvent, RingOverlapBehavior, RingResponse
 from ..ring_manager import get_ring_manager
-from ..security import get_source_user
+from ..security import get_source_user, require_auth
 from ..storage import get_storage, ConfigNotFoundError
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["ring"])
+
+ring_status_router = APIRouter(
+    prefix="/api", tags=["ring"], dependencies=[Depends(require_auth)]
+)
+
+
+@ring_status_router.get("/active-rings")
+async def active_rings():
+    """Current active ring calls, keyed by config id. Polled by the web UI."""
+    active = get_ring_manager().get_active_calls()
+    return {"active": {str(config_id): state for config_id, state in active.items()}}
 
 
 @router.get("/ring/{id_or_slug}", response_model=RingResponse)

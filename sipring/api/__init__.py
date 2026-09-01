@@ -1,7 +1,7 @@
 """API endpoints."""
 
-from .ring import router as ring_router
+from .ring import router as ring_router, ring_status_router
 from .config import router as config_router
 from .events import router as events_router
 
-__all__ = ["ring_router", "config_router", "events_router"]
+__all__ = ["ring_router", "ring_status_router", "config_router", "events_router"]

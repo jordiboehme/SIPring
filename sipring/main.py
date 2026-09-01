@@ -11,7 +11,7 @@ from fastapi.templating import Jinja2Templates
 
 from . import __version__
 from .config import get_settings
-from .api import ring_router, config_router, events_router
+from .api import ring_router, ring_status_router, config_router, events_router
 from .security import require_auth
 from .storage import get_storage, get_event_storage
 from .ring_manager import get_ring_manager
@@ -52,6 +52,7 @@ if (BASE_DIR / "static").exists():
 
 # Include API routers
 app.include_router(ring_router)
+app.include_router(ring_status_router)
 app.include_router(config_router)
 app.include_router(events_router)
 

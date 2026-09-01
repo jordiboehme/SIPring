@@ -177,3 +177,26 @@ def test_new_config_form(client):
     response = client.get("/config/new")
     assert response.status_code == 200
     assert "Create" in response.text
+
+
+def test_active_rings_empty(client):
+    response = client.get("/api/active-rings")
+    assert response.status_code == 200
+    assert response.json() == {"active": {}}
+
+
+def test_active_rings_reports_states(client):
+    from uuid import uuid4
+    from sipring.ring_manager import ActiveCall, get_ring_manager
+
+    manager = get_ring_manager()
+    config_id = uuid4()
+    manager._active_calls[config_id] = ActiveCall(
+        config_id=config_id, client=None, task=None, state="RINGING"
+    )
+    try:
+        response = client.get("/api/active-rings")
+        assert response.status_code == 200
+        assert response.json()["active"] == {str(config_id): "RINGING"}
+    finally:
+        manager._active_calls.pop(config_id, None)
