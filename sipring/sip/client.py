@@ -204,13 +204,28 @@ class SIPClient:
         message = self._msg_builder.build_invite(self._state)
         self._send(message)
 
-        deadline = asyncio.get_event_loop().time() + 10.0
-        while asyncio.get_event_loop().time() < deadline:
+        loop = asyncio.get_event_loop()
+        deadline = loop.time() + 10.0
+        retransmit_interval = self.invite_retransmit_interval
+        next_retransmit = loop.time() + retransmit_interval
+        got_any_response = False
+
+        while loop.time() < deadline:
             if self._cancel_requested:
                 return False
 
-            response = await self._receive(timeout=1.0)
+            if not got_any_response and loop.time() >= next_retransmit:
+                logger.debug("Retransmitting INVITE")
+                self._send(message)
+                retransmit_interval *= 2
+                next_retransmit = loop.time() + retransmit_interval
+
+            wait = min(0.5, deadline - loop.time())
+            if not got_any_response:
+                wait = min(wait, max(next_retransmit - loop.time(), 0.01))
+            response = await self._receive(timeout=wait)
             if response:
+                got_any_response = True
                 code = parse_response_code(response)
                 if code == 100:
                     logger.debug("Got 100 Trying")

@@ -81,3 +81,58 @@ async def test_foreign_call_id_responses_are_ignored(fake_server):
 
     # Without filtering, the stale 486 would produce BUSY.
     assert result == CallResult.COMPLETED
+
+
+async def test_invite_is_retransmitted_until_response(fake_server):
+    """Lost INVITEs must be retransmitted; the third attempt gets through."""
+    state = {"invites": 0}
+
+    def handler(msg):
+        if msg.startswith("INVITE "):
+            state["invites"] += 1
+            if state["invites"] < 3:
+                return []  # simulate packet loss
+            return [sip_response(msg, 180, "Ringing")]
+        if msg.startswith("CANCEL "):
+            return [
+                sip_response(msg, 200, "OK"),
+                sip_response(msg, 487, "Request Terminated",
+                             to_tag="gig1", cseq="1 INVITE"),
+            ]
+        return []
+
+    fake_server.handler = handler
+    client = make_client(fake_server.port)
+    result = await client.ring(duration=0.2)
+
+    assert result == CallResult.COMPLETED
+    assert len(fake_server.requests("INVITE")) >= 3
+
+
+async def test_no_retransmission_after_provisional_response(fake_server):
+    """A 100 Trying must stop retransmissions even before 180 arrives."""
+
+    def handler(msg):
+        if msg.startswith("INVITE "):
+            return [sip_response(msg, 100, "Trying")]
+        if msg.startswith("CANCEL "):
+            return [
+                sip_response(msg, 200, "OK"),
+                sip_response(msg, 487, "Request Terminated",
+                             to_tag="gig1", cseq="1 INVITE"),
+            ]
+        return []
+
+    fake_server.handler = handler
+    client = make_client(fake_server.port, invite_retransmit_interval=0.05)
+
+    async def run():
+        return await client.ring(duration=0.2)
+
+    task = asyncio.create_task(run())
+    await asyncio.sleep(0.5)
+    client.request_cancel()
+    result = await task
+
+    assert result in (CallResult.CANCELLED, CallResult.TIMEOUT)
+    assert len(fake_server.requests("INVITE")) == 1
