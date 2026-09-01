@@ -29,7 +29,13 @@ SIPring is a Docker-based SIP phone ringing service for triggering alerts (doorb
                  (answered) → ANSWERED → (send BYE) → TERMINATED
    ```
 
-5. **Caller ID Display**: The `P-Asserted-Identity` and `Remote-Party-ID` headers are used to display caller name on the phone. Format based on working capture from `invite_haustuer_clean.sip`.
+5. **Caller ID Display**: The `P-Asserted-Identity` and `Remote-Party-ID` headers are used to display caller name on the phone. The INVITE is a single RFC-compliant header block (see `sipring/sip/messages.py`); the original hardware capture file `invite_haustuer_clean.sip` no longer exists in the repo.
+
+6. **Client-side robustness** (implemented 2026-09-01):
+   - INVITE is retransmitted with a doubling interval until the first response (RFC 3261 Timer A style)
+   - Non-2xx final responses (486, 487, 4xx) are ACKed so the peer stops retransmitting them
+   - Received responses are filtered by Call-ID; stale packets from earlier dialogs are dropped
+   - A 200 OK to INVITE arriving during CANCEL is handled with ACK + BYE (result: answered)
 
 ### Architecture
 
@@ -45,6 +51,8 @@ SIPring is a Docker-based SIP phone ringing service for triggering alerts (doorb
 
 4. **Docker Networking**: Must use `network_mode: host` for SIP UDP to work correctly - SIP requires the source IP to match what the phone sees.
 
+5. **Auth model**: When `SIPRING_USERNAME`/`SIPRING_PASSWORD` are set, the web UI and `/api/*` require basic auth (see `sipring/security.py`). The `/ring/*` and `/health` endpoints are intentionally unauthenticated so simple trigger devices can call them.
+
 ### Target Hardware
 
 - **SIP Server**: Gigaset N670 IP DECT base station
@@ -53,7 +61,7 @@ SIPring is a Docker-based SIP phone ringing service for triggering alerts (doorb
 
 ## Reference Files
 
-- `invite_haustuer_clean.sip` - Working INVITE message capture that displays caller ID correctly on the Gigaset phone
+- `sipring/sip/messages.py` - canonical SIP message formats (INVITE/CANCEL/ACK/BYE)
 
 ## Testing Notes
 
@@ -87,6 +95,7 @@ python poc_sip.py --wait-answer
 | PUT | `/api/configs/{uuid}` | Update config |
 | DELETE | `/api/configs/{uuid}` | Delete config |
 | POST | `/api/configs/{uuid}/test` | Test ring (3s) |
+| GET | `/api/active-rings` | Active ring states (for UI polling) |
 
 ## Environment Variables
 
@@ -107,7 +116,7 @@ python poc_sip.py --wait-answer
 
 ## Learnings
 
-1. **SIP Message Format**: Extra blank lines in SIP messages can cause issues. The format in `invite_haustuer_clean.sip` has specific placement of headers.
+1. **SIP Message Format**: The INVITE was originally built with blank lines mid-headers to mirror a hardware capture; since 2026-09-01 it is a single RFC-compliant header block (pending hardware verification against the Gigaset N670).
 
 2. **Timezone-aware Datetimes**: Python 3.12+ deprecates `datetime.utcnow()`. Use `datetime.now(timezone.utc)` instead.
 

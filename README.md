@@ -126,6 +126,8 @@ curl -X DELETE http://localhost:8080/api/configs/front-door
 | `SIPRING_PASSWORD`  | -       | Basic auth password (optional)                                       |
 | `SIPRING_EVENT_RETENTION_DAYS` | `90` | Days to keep event history (0 = keep forever)             |
 
+When basic auth is configured, the web UI and the /api endpoints require it. The /ring endpoints stay open by design so trigger devices (doorbell buttons, home automation) work without credentials.
+
 ## Integration Examples
 
 ### Home Assistant
@@ -162,7 +164,7 @@ Simply use the ring URL as a webhook endpoint in any service that supports HTTP 
 
 - **Gigaset N670 IP Pro DECT** - Works without SIP authentication on LAN
 
-The service should work with any SIP phone/PBX that accepts standard SIP INVITE messages. Authentication is not currently implemented but can be added if needed.
+The service should work with any SIP phone/PBX that accepts standard SIP INVITE messages. SIP authentication is not currently implemented but can be added if needed (HTTP basic auth for the web UI and API is available via SIPRING_USERNAME/SIPRING_PASSWORD).
 
 ## API Documentation
 
