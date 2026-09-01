@@ -1,19 +1,18 @@
 """FastAPI application entry point."""
 
 import logging
-import secrets
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, Request, Depends, HTTPException, status
+from fastapi import FastAPI, Request, Depends, HTTPException
 from fastapi.responses import HTMLResponse
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from . import __version__
 from .config import get_settings
 from .api import ring_router, config_router, events_router
+from .security import require_auth
 from .storage import get_storage, get_event_storage
 from .ring_manager import get_ring_manager
 
@@ -56,75 +55,9 @@ app.include_router(ring_router)
 app.include_router(config_router)
 app.include_router(events_router)
 
-# Basic auth setup
-security = HTTPBasic()
-
-
-def verify_auth(credentials: HTTPBasicCredentials = Depends(security)):
-    """Verify basic authentication if enabled."""
-    if not settings.auth_enabled:
-        return True
-
-    correct_username = secrets.compare_digest(
-        credentials.username.encode("utf8"),
-        settings.username.encode("utf8"),
-    )
-    correct_password = secrets.compare_digest(
-        credentials.password.encode("utf8"),
-        settings.password.encode("utf8"),
-    )
-
-    if not (correct_username and correct_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials",
-            headers={"WWW-Authenticate": "Basic"},
-        )
-    return True
-
-
-def optional_auth(request: Request):
-    """Optional auth check - only for web UI routes."""
-    if not settings.auth_enabled:
-        return True
-
-    auth = request.headers.get("Authorization")
-    if not auth:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required",
-            headers={"WWW-Authenticate": "Basic"},
-        )
-
-    # Parse basic auth
-    try:
-        scheme, credentials = auth.split()
-        if scheme.lower() != "basic":
-            raise HTTPException(status_code=401, detail="Invalid auth scheme")
-
-        import base64
-        decoded = base64.b64decode(credentials).decode("utf-8")
-        username, password = decoded.split(":", 1)
-
-        correct_username = secrets.compare_digest(username, settings.username)
-        correct_password = secrets.compare_digest(password, settings.password)
-
-        if not (correct_username and correct_password):
-            raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials",
-            headers={"WWW-Authenticate": "Basic"},
-        )
-
-    return True
-
-
 # Web UI routes
 @app.get("/", response_class=HTMLResponse)
-async def dashboard(request: Request, _: bool = Depends(optional_auth)):
+async def dashboard(request: Request, _: bool = Depends(require_auth)):
     """Main dashboard showing all ring configurations."""
     storage = get_storage()
     ring_manager = get_ring_manager()
@@ -173,7 +106,7 @@ async def events_page(
     trigger_type: str = None,
     limit: int = 50,
     offset: int = 0,
-    _: bool = Depends(optional_auth),
+    _: bool = Depends(require_auth),
 ):
     """Event log page."""
     from datetime import datetime, timedelta, timezone
@@ -225,7 +158,7 @@ async def events_page(
 
 
 @app.get("/config/new", response_class=HTMLResponse)
-async def new_config_form(request: Request, _: bool = Depends(optional_auth)):
+async def new_config_form(request: Request, _: bool = Depends(require_auth)):
     """Form to create a new configuration."""
     return templates.TemplateResponse(
         request, "config_form.html", {
@@ -236,7 +169,7 @@ async def new_config_form(request: Request, _: bool = Depends(optional_auth)):
 
 
 @app.get("/config/{id_or_slug}/edit", response_class=HTMLResponse)
-async def edit_config_form(request: Request, id_or_slug: str, _: bool = Depends(optional_auth)):
+async def edit_config_form(request: Request, id_or_slug: str, _: bool = Depends(require_auth)):
     """Form to edit an existing configuration."""
     storage = get_storage()
 
@@ -254,7 +187,7 @@ async def edit_config_form(request: Request, id_or_slug: str, _: bool = Depends(
 
 
 @app.get("/config/{id_or_slug}", response_class=HTMLResponse)
-async def config_detail(request: Request, id_or_slug: str, _: bool = Depends(optional_auth)):
+async def config_detail(request: Request, id_or_slug: str, _: bool = Depends(require_auth)):
     """Detail view for a configuration."""
     storage = get_storage()
     ring_manager = get_ring_manager()
@@ -279,7 +212,7 @@ async def config_detail(request: Request, id_or_slug: str, _: bool = Depends(opt
 
 
 @app.get("/about", response_class=HTMLResponse)
-async def about_page(request: Request, _: bool = Depends(optional_auth)):
+async def about_page(request: Request, _: bool = Depends(require_auth)):
     """About page with version, license, and credits."""
     from datetime import datetime
     return templates.TemplateResponse(

@@ -5,14 +5,15 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
 from ..models import RingEventResponse
+from ..security import require_auth
 from ..storage import get_event_storage
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/events", tags=["events"])
+router = APIRouter(prefix="/api/events", tags=["events"], dependencies=[Depends(require_auth)])
 
 
 @router.get("", response_model=RingEventResponse)

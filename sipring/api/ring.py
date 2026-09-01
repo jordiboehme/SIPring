@@ -1,38 +1,18 @@
 """Ring trigger endpoints."""
 
-import base64
 import logging
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query, Request
 
-from ..config import get_settings
 from ..models import RingEvent, RingOverlapBehavior, RingResponse
 from ..ring_manager import get_ring_manager
+from ..security import get_source_user
 from ..storage import get_storage, ConfigNotFoundError
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["ring"])
-
-
-def _get_source_user(request: Request) -> Optional[str]:
-    """Extract authenticated username from request, if any."""
-    settings = get_settings()
-    if not settings.auth_enabled:
-        return None
-    auth = request.headers.get("Authorization")
-    if not auth:
-        return None
-    try:
-        scheme, credentials = auth.split()
-        if scheme.lower() == "basic":
-            decoded = base64.b64decode(credentials).decode("utf-8")
-            username, _ = decoded.split(":", 1)
-            return username
-    except Exception:
-        pass
-    return None
 
 
 @router.get("/ring/{id_or_slug}", response_model=RingResponse)
@@ -90,7 +70,7 @@ async def trigger_ring(
         config_slug=config.slug,
         duration=ring_duration,
         source_ip=request.client.host if request.client else None,
-        source_user=_get_source_user(request),
+        source_user=get_source_user(request),
         trigger_type="ring",
     )
 

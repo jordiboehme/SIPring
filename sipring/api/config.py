@@ -1,11 +1,9 @@
 """Configuration CRUD endpoints."""
 
-import base64
 import logging
-from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from ..config import get_settings
 from ..models import (
@@ -18,11 +16,12 @@ from ..models import (
     ConfigListResponse,
 )
 from ..ring_manager import get_ring_manager
+from ..security import require_auth, get_source_user
 from ..storage import get_storage, ConfigNotFoundError, StorageError
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/configs", tags=["config"])
+router = APIRouter(prefix="/api/configs", tags=["config"], dependencies=[Depends(require_auth)])
 
 
 def config_to_response(config: RingConfig, request: Request) -> RingConfigResponse:
@@ -149,25 +148,6 @@ async def clone_config(id_or_slug: str, request: Request):
     return config_to_response(new_config, request)
 
 
-def _get_source_user(request: Request) -> Optional[str]:
-    """Extract authenticated username from request, if any."""
-    settings = get_settings()
-    if not settings.auth_enabled:
-        return None
-    auth = request.headers.get("Authorization")
-    if not auth:
-        return None
-    try:
-        scheme, credentials = auth.split()
-        if scheme.lower() == "basic":
-            decoded = base64.b64decode(credentials).decode("utf-8")
-            username, _ = decoded.split(":", 1)
-            return username
-    except Exception:
-        pass
-    return None
-
-
 @router.post("/{id_or_slug}/test", response_model=RingResponse)
 async def test_config(id_or_slug: str, request: Request, duration: float = 3):
     """
@@ -199,7 +179,7 @@ async def test_config(id_or_slug: str, request: Request, duration: float = 3):
         config_slug=config.slug,
         duration=test_duration,
         source_ip=request.client.host if request.client else None,
-        source_user=_get_source_user(request),
+        source_user=get_source_user(request),
         trigger_type="test",
     )
 
