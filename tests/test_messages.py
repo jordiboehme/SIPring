@@ -181,3 +181,22 @@ def test_parse_cseq_method():
     response = "SIP/2.0 200 OK\r\nCSeq: 1 CANCEL\r\n\r\n"
     assert parse_cseq_method(response) == "CANCEL"
     assert parse_cseq_method("SIP/2.0 200 OK\r\n\r\n") is None
+
+
+def test_build_invite_has_single_header_block():
+    """All headers must precede the single blank-line terminator (RFC 3261)."""
+    msg = SIPMessage(
+        target_user="1234", target_host="10.0.0.1", target_port=5060,
+        caller_name="Test", caller_user="caller",
+        local_host="10.0.0.2", local_port=5062,
+    )
+    state = CallState(call_id="test-1", from_tag="ft1",
+                      branch="z9hG4bKb1", cseq=1)
+    invite = msg.build_invite(state)
+
+    headers, _, body = invite.partition("\r\n\r\n")
+    assert body == "", "INVITE must have an empty body"
+    assert "P-Asserted-Identity:" in headers
+    assert "Remote-Party-ID:" in headers
+    assert "User-Agent:" in headers
+    assert "Content-Length: 0" in headers
