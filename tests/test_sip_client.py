@@ -9,7 +9,7 @@ import pytest
 os.environ.setdefault("SIPRING_DATA_DIR", tempfile.mkdtemp())
 
 from sipring.sip.client import SIPClient, CallResult
-from tests.fake_sip import FakeSIPServer, sip_response
+from tests.fake_sip import FakeSIPServer, sip_response, wait_until
 
 
 @pytest.fixture
@@ -157,8 +157,8 @@ async def test_busy_response_is_acked(fake_server):
     result = await client.ring(duration=0.2)
 
     assert result == CallResult.BUSY
+    assert await wait_until(lambda: len(fake_server.requests("ACK")) == 1)
     acks = fake_server.requests("ACK")
-    assert len(acks) == 1
     assert _branch_of(acks[0]) == _branch_of(fake_server.requests("INVITE")[0])
     assert "CSeq: 1 ACK" in acks[0]
 
@@ -182,4 +182,4 @@ async def test_487_after_cancel_is_acked(fake_server):
     result = await client.ring(duration=0.2)
 
     assert result == CallResult.COMPLETED
-    assert len(fake_server.requests("ACK")) == 1
+    assert await wait_until(lambda: len(fake_server.requests("ACK")) == 1)

@@ -2,7 +2,9 @@
 
 import asyncio
 import re
-from typing import Callable, Optional
+from typing import Callable, Optional, TypeVar, Awaitable
+
+T = TypeVar("T")
 
 
 class FakeSIPServer(asyncio.DatagramProtocol):
@@ -68,3 +70,12 @@ def sip_response(
         f"Content-Length: 0\r\n"
         f"\r\n"
     )
+
+
+async def wait_until(predicate: Callable[[], T], timeout: float = 1.0) -> T:
+    """Poll until predicate() is truthy or timeout elapses; returns predicate()."""
+    loop = asyncio.get_event_loop()
+    deadline = loop.time() + timeout
+    while not predicate() and loop.time() < deadline:
+        await asyncio.sleep(0.01)
+    return predicate()

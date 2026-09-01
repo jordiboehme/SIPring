@@ -167,9 +167,6 @@ class SIPClient:
 
     def _ack_error_response(self, response: str) -> None:
         """ACK a non-2xx final response so the peer stops retransmitting it."""
-        if not self._msg_builder:
-            logger.warning("Cannot ACK error response: message builder not initialized")
-            return
         to_tag = parse_to_tag(response) or ""
         self._send(self._msg_builder.build_ack_for_error(self._state, to_tag))
 
@@ -250,13 +247,11 @@ class SIPClient:
                     return True
                 elif code == 486 or code == 600:
                     self._ack_error_response(response)
-                    await asyncio.sleep(0.01)  # Wait for ACK to be delivered
                     logger.info(f"Got {code} - Busy")
                     self._state.state = "BUSY"
                     return False
                 elif code >= 400:
                     self._ack_error_response(response)
-                    await asyncio.sleep(0.01)  # Wait for ACK to be delivered
                     logger.warning(f"Error response: {code}")
                     self._state.state = "TERMINATED"
                     return False
@@ -288,7 +283,6 @@ class SIPClient:
                     got_200 = True
                 elif code == 487:
                     self._ack_error_response(response)
-                    await asyncio.sleep(0.01)  # Wait for ACK to be delivered
                     logger.debug("Got 487 Request Terminated")
                     got_487 = True
 
