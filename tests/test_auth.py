@@ -37,6 +37,7 @@ def auth_client(monkeypatch):
 def test_api_requires_auth_when_enabled(auth_client):
     assert auth_client.get("/api/configs").status_code == 401
     assert auth_client.get("/api/events").status_code == 401
+    assert auth_client.get("/api/active-rings").status_code == 401
 
 
 def test_api_accepts_valid_credentials(auth_client):

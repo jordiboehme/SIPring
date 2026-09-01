@@ -1,3 +1,8 @@
+/* Author styles on .btn/.badge would otherwise override the UA's [hidden] rule */
+[hidden] {
+    display: none !important;
+}
+
 /* Self-hosted Inter variable font (latin subset), replacing the Google Fonts CDN */
 @font-face {
     font-family: 'Inter';
