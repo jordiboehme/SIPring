@@ -92,6 +92,7 @@ class SIPClient:
         local_host: str = "",
         local_port: int = 5062,
         user_agent: str = "SIPring",
+        invite_retransmit_interval: float = 0.5,
     ):
         self.target_user = target_user
         self.target_host = target_host
@@ -100,6 +101,7 @@ class SIPClient:
         self.caller_user = caller_user
         self.local_port = local_port
         self.user_agent = user_agent
+        self.invite_retransmit_interval = invite_retransmit_interval
 
         # Determine local host: config override > parameter > auto-detect
         settings = get_settings()
